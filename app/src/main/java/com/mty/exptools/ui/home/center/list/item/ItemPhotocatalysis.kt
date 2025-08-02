@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mty.exptools.R
 import com.mty.exptools.enum.LightSource
+import com.mty.exptools.enum.Pollutant
 import com.mty.exptools.ui.theme.ExptoolsTheme
 
 @Composable
@@ -48,7 +49,10 @@ fun ItemPhotocatalysis(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 7.dp)) {
+        Column(
+            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 7.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // 左侧图标
                 Image(
@@ -85,7 +89,8 @@ fun ItemPhotocatalysis(
 
                     Text(
                         text = buildString {
-                            append("${uiState.targetPollutant} | ${uiState.pollutantWavelength}nm")
+                            append(uiState.targetPollutant.pollutantName)
+                            append(" | ${uiState.targetPollutant.waveLength}nm")
                             append(" | ${uiState.lightSource.label} ${uiState.lightSource.wavelength}nm")
                             if (uiState.status != ItemStatus.STATUS_COMPLETE)
                                 append(" | 距离结束 ${uiState.totalMinutes - uiState.elapsedMinutes} 分钟")
@@ -103,19 +108,23 @@ fun ItemPhotocatalysis(
                 )
             }
 
-            Spacer(modifier = Modifier.height(9.dp))
-
-            // 进度条
-            LinearProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp),
-                color = MaterialTheme.colorScheme.primary,
-                strokeCap = StrokeCap.Round,
-                gapSize = (-4).dp,
-                drawStopIndicator = {}
-            )
+            if (uiState.status != ItemStatus.STATUS_COMPLETE) {
+                Spacer(modifier = Modifier.height(9.dp))
+                // 进度条
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth(0.95f)
+                        .height(4.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeCap = StrokeCap.Round,
+                    gapSize = (-4).dp,
+                    drawStopIndicator = {}
+                )
+            } else {
+                // 保持上下填充一致
+                Spacer(modifier = Modifier.height(5.dp))
+            }
         }
     }
 }
@@ -131,12 +140,11 @@ private fun statusToString(status: ItemStatus) = when(status) {
 fun ItemPhotocatalysisPreview() {
     ExptoolsTheme {
         val uiState = ItemPhotoUiState(
-            id = 1,
+            listItemId = 1,
             materialName = "钨酸铋-实验2-22",
-            targetPollutant = "TC",
-            pollutantWavelength = 357,
+            targetPollutant = Pollutant.TC,
             lightSource = LightSource.XENON_L,
-            elapsedMinutes = 70,
+            elapsedMinutes = 85,
             totalMinutes = 90,
             rightTimes = 20,
             status = ItemStatus.STATUS_START

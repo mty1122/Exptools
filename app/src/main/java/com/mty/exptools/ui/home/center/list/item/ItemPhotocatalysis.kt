@@ -38,7 +38,7 @@ fun ItemPhotocatalysis(
     onClick: (() -> Unit)? = null
 ) {
     val animatedProgress by animateFloatAsState(
-        targetValue = uiState.elapsedMinutes.toFloat() / uiState.totalMinutes.coerceAtLeast(1),
+        targetValue = uiState.progress,
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
     )
     Card(
@@ -146,6 +146,7 @@ fun ItemPhotocatalysisPreview() {
             lightSource = LightSource.XENON_L,
             elapsedMinutes = 85,
             totalMinutes = 90,
+            progress = 0.75f,
             rightTimes = 20,
             status = ItemStatus.STATUS_START
         )

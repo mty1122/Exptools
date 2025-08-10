@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -23,14 +25,24 @@ fun HomeScreen() {
     val navController = rememberNavController()
     var currentRoute by rememberSaveable { mutableStateOf(HomeDestination.List.route) }
 
+    // 记录导航次数
+    var navCount by remember { mutableIntStateOf(0) }
+
     Scaffold(
-        topBar = { HomeTopBar("ExpTools") },
+        topBar = {
+            HomeTopBar("ExpTools"){
+                navCount++ // 单击搜索按钮时导航次数+1
+            }
+        },
         bottomBar = {
             HomeBottomBar(
                 currentRoute = currentRoute,
-                onItemClick = {
-                    currentRoute = it
-                    navController.navigate(it)
+                onItemClick = { targetRoute->
+                    if (targetRoute != currentRoute) {
+                        currentRoute = targetRoute
+                        navController.navigate(targetRoute)
+                        navCount++ // 跳转至其他页面时导航次数+1
+                    }
                 }
             )
         }
@@ -40,7 +52,7 @@ fun HomeScreen() {
             startDestination = HomeDestination.List.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(HomeDestination.List.route) { ListScreen() }
+            composable(HomeDestination.List.route) { ListScreen(navCount = navCount) }
             composable(HomeDestination.More.route) { MoreScreen() }
         }
     }

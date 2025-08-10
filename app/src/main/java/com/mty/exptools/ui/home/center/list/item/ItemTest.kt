@@ -25,8 +25,8 @@ import com.mty.exptools.R
 import com.mty.exptools.ui.theme.ExptoolsTheme
 
 @Composable
-fun ItemOther(
-    uiState: ItemOtherUiState,
+fun ItemTest(
+    uiState: ItemTestUiState,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
@@ -45,7 +45,7 @@ fun ItemOther(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // 左侧图标
                 Image(
-                    painter = painterResource(id = R.drawable.icon_other),
+                    painter = painterResource(id = R.drawable.icon_test),
                     contentDescription = "测试任务",
                     modifier = Modifier
                         .size(40.dp)
@@ -63,7 +63,7 @@ fun ItemOther(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = uiState.title,
+                            text = uiState.materialName,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
                         )
@@ -77,7 +77,7 @@ fun ItemOther(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "${uiState.info} | ${uiState.endDate}",
+                        text = "${uiState.testInfo} | ${uiState.testDate}",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -95,23 +95,23 @@ fun ItemOther(
 }
 
 private fun statusToString(status: ItemStatus) = when(status) {
-    ItemStatus.STATUS_START -> "距离结束（天）"
+    ItemStatus.STATUS_START -> "距离开始（天）"
     ItemStatus.STATUS_COMPLETE -> "已结束（天）"
     else -> ""
 }
 
 @Preview(showBackground = true)
 @Composable
-fun ItemItemOtherPreview() {
+fun ItemItemTestPreview() {
     ExptoolsTheme {
-        val uiState = ItemOtherUiState(
+        val uiState = ItemTestUiState(
             listItemId = 1,
-            title = "某文章撰写",
-            info = "引言部分",
-            endDate = "2025.03.12",
-            rightTimes = 20,
+            materialName = "钨酸铋-实验2-22",
+            testInfo = "XPS",
+            testDate = "2025.03.22",
+            rightTimes = 10,
             status = ItemStatus.STATUS_COMPLETE
         )
-        ItemOther(uiState)
+        ItemTest(uiState)
     }
 }

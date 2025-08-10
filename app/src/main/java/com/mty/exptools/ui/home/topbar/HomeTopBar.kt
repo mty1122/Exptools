@@ -9,13 +9,15 @@ import com.mty.exptools.ui.theme.ExptoolsTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar(title: String) {
+fun HomeTopBar(
+    title: String,
+    searchButtonOnClick: () -> Unit) {
     TopAppBar(
         title = {
             Text(text = title)
         },
         actions = {
-            IconButton(onClick = { /* TODO */ }) {
+            IconButton(onClick = searchButtonOnClick) {
                 Icon(Icons.Default.Search, contentDescription = "Search")
             }
         }
@@ -26,6 +28,6 @@ fun HomeTopBar(title: String) {
 @Composable
 fun HomeTopBarPreview() {
     ExptoolsTheme {
-        HomeTopBar("ExpTools")
+        HomeTopBar("ExpTools"){}
     }
 }

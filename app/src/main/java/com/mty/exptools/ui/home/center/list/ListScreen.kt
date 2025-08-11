@@ -26,6 +26,8 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import com.mty.exptools.ui.SynthesisEditRoute
 import com.mty.exptools.ui.home.center.list.item.ItemOther
 import com.mty.exptools.ui.home.center.list.item.ItemOtherUiState
 import com.mty.exptools.ui.home.center.list.item.ItemPhotoUiState
@@ -37,7 +39,10 @@ import com.mty.exptools.ui.home.center.list.item.ItemTestUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListScreen(navCount: Int) {
+fun ListScreen(
+    navCount: Int,
+    topNavController: NavController
+) {
     val viewModel: ListViewModel = hiltViewModel()
     val itemUiStateList by viewModel.itemUiStateList.collectAsStateWithLifecycle()
 
@@ -83,7 +88,9 @@ fun ListScreen(navCount: Int) {
             items(itemUiStateList, key = { it.listItemId }) { uiState ->
                 when (uiState) {
                     is ItemPhotoUiState -> ItemPhotocatalysis(uiState)
-                    is ItemSynUiState -> ItemSynthesis(uiState)
+                    is ItemSynUiState -> ItemSynthesis(uiState) {
+                        topNavController.navigate(SynthesisEditRoute(uiState.materialName))
+                    }
                     is ItemTestUiState -> ItemTest(uiState)
                     is ItemOtherUiState -> ItemOther(uiState)
                 }
@@ -93,7 +100,11 @@ fun ListScreen(navCount: Int) {
         AddItemSpeedDial(
             expanded = expanded,
             onExpandedChange = { expanded = it },
-            onAdd = {},
+            onAdd = { itemType->
+                if (itemType == ItemType.SYNTHESIS) {
+                    topNavController.navigate(SynthesisEditRoute())
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)

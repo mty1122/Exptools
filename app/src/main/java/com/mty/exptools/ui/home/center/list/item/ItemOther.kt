@@ -87,7 +87,7 @@ fun ItemOther(
                     text = uiState.rightTimes.toString(),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
         }

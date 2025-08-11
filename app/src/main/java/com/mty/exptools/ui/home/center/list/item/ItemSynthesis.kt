@@ -92,12 +92,8 @@ fun ItemSynthesis(
                             }
                             else {
                                 append(uiState.targetStep)
-                                if (uiState.targetDevice != "")
-                                    append(" | ${uiState.targetDevice}")
                                 if (uiState.nextStep != "") {
                                     append("\n${uiState.nextStep}")
-                                    if (uiState.nextDevice != "")
-                                        append(" | ${uiState.nextDevice}")
                                 }
                             }
                         },
@@ -110,7 +106,7 @@ fun ItemSynthesis(
                     text = uiState.rightTimes.toString(),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
 
@@ -148,8 +144,7 @@ fun ItemItemSynthesisPreview() {
         val uiState = ItemSynUiState(
             listItemId = 1,
             materialName = "钨酸铋-实验2-22",
-            targetStep = "120℃ 14h 水热反应",
-            targetDevice = "1号釜 小烘箱",
+            targetStep = "120℃ 14h 水热反应 | 1号釜 小烘箱",
             nextStep = "60℃ 干燥 12小时",
             progress = 0.6f,
             rightTimes = 20,

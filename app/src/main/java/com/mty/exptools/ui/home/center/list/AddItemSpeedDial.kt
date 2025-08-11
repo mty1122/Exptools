@@ -1,14 +1,11 @@
 package com.mty.exptools.ui.home.center.list
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,7 +77,6 @@ fun AddItemSpeedDial(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.align(Alignment.BottomEnd)
         ) {
-            val total = 4
 
             SpeedItem(
                 visible = expanded,
@@ -90,8 +87,7 @@ fun AddItemSpeedDial(
                     onExpandedChange(false)
                     onAdd(ItemType.SYNTHESIS)
                 },
-                index = 0,
-                totalCount = total
+                index = 0
             )
             SpeedItem(
                 visible = expanded,
@@ -102,8 +98,7 @@ fun AddItemSpeedDial(
                     onExpandedChange(false)
                     onAdd(ItemType.PHOTOCATALYSIS)
                 },
-                index = 1,
-                totalCount = total
+                index = 1
             )
             SpeedItem(
                 visible = expanded,
@@ -114,8 +109,7 @@ fun AddItemSpeedDial(
                     onExpandedChange(false)
                     onAdd(ItemType.TEST)
                 },
-                index = 2,
-                totalCount = total
+                index = 2
             )
             SpeedItem(
                 visible = expanded,
@@ -126,8 +120,7 @@ fun AddItemSpeedDial(
                     onExpandedChange(false)
                     onAdd(ItemType.OTHER)
                 },
-                index = 3,
-                totalCount = total
+                index = 3
             )
 
             // FAB 旋转不变
@@ -161,38 +154,23 @@ private fun SpeedItem(
     label: String,
     color: Color,
     onClick: () -> Unit,
-    index: Int,
-    totalCount: Int
+    index: Int
 ) {
     val delayPerItem = 50
-    val enterDelay = index * delayPerItem
-    val exitDelay = (totalCount - 1 - index) * delayPerItem
-
-    // 用 transition 管理 scale：展开 → 1f；收回 → 0.92f
-    val transition = updateTransition(targetState = visible, label = "pill-visible")
-    val scale by transition.animateFloat(
-        transitionSpec = {
-            if (targetState) {
-                // 展开：错峰
-                tween(durationMillis = 160, delayMillis = enterDelay)
-            } else {
-                // 收回：反向错峰
-                tween(durationMillis = 150, delayMillis = exitDelay)
-            }
-        },
+    // 微缩放：展开时从 0.92 → 1.0
+    val targetScale by remember(visible) { mutableFloatStateOf(if (visible) 1f else 0.92f) }
+    val scale by animateFloatAsState(
+        targetValue = targetScale,
+        animationSpec = tween(durationMillis = 160, delayMillis = index * delayPerItem),
         label = "pill-scale"
-    ) { isVisible -> if (isVisible) 1f else 0.92f }
+    )
 
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(
             initialOffsetY = { it / 3 },
-            animationSpec = tween(durationMillis = 180, delayMillis = enterDelay)
-        ) + fadeIn(animationSpec = tween(durationMillis = 180, delayMillis = enterDelay)),
-        exit = slideOutVertically(
-            targetOffsetY = { it / 3 },
-            animationSpec = tween(durationMillis = 150, delayMillis = exitDelay)
-        ) + fadeOut(animationSpec = tween(durationMillis = 150, delayMillis = exitDelay))
+            animationSpec = tween(180, delayMillis = index * delayPerItem)
+        ) + fadeIn(animationSpec = tween(180, delayMillis = index * delayPerItem))
     ) {
         Surface(
             onClick = onClick,

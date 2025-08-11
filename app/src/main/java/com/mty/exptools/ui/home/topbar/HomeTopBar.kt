@@ -11,14 +11,17 @@ import com.mty.exptools.ui.theme.ExptoolsTheme
 @Composable
 fun HomeTopBar(
     title: String,
-    searchButtonOnClick: () -> Unit) {
+    isList: Boolean,
+    onSearchButtonClick: () -> Unit) {
     TopAppBar(
         title = {
             Text(text = title)
         },
         actions = {
-            IconButton(onClick = searchButtonOnClick) {
-                Icon(Icons.Default.Search, contentDescription = "Search")
+            if (isList) {
+                IconButton(onClick = onSearchButtonClick) {
+                    Icon(Icons.Default.Search, contentDescription = "Search")
+                }
             }
         }
     )
@@ -28,6 +31,6 @@ fun HomeTopBar(
 @Composable
 fun HomeTopBarPreview() {
     ExptoolsTheme {
-        HomeTopBar("ExpTools"){}
+        HomeTopBar("ExpTools", true){}
     }
 }

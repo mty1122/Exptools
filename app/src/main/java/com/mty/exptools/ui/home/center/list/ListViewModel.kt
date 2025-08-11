@@ -49,8 +49,7 @@ class ListViewModel @Inject constructor() : ViewModel() {
         val uiState2 = ItemSynUiState(
             listItemId = 2,
             materialName = "钨酸铋-实验2-23",
-            targetStep = "120℃ 24h 水热反应",
-            targetDevice = "1号釜 小烘箱",
+            targetStep = "120℃ 24h 水热反应 | 1号釜 小烘箱",
             nextStep = "60℃ 干燥 12小时",
             progress = 0.6f,
             rightTimes = 999,

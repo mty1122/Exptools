@@ -1,12 +1,34 @@
 package com.mty.exptools.repository
 
-import com.mty.exptools.ui.share.edit.syn.SynthesisDraft
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import com.mty.exptools.domain.syn.SynthesisDraft
+import com.mty.exptools.domain.syn.toDomain
+import com.mty.exptools.domain.syn.toEntity
+import com.mty.exptools.logic.dao.AppDatabase
+import com.mty.exptools.logic.dao.SynthesisDao
 import javax.inject.Inject
 
 class SynthesisRepository @Inject constructor(){
-    //suspend fun getByMaterialName(name: String): SynthesisDraft?
-    fun observeByMaterialName(name: String): Flow<SynthesisDraft?> = flow { SynthesisDraft() }
-    suspend fun upsert(draft: SynthesisDraft) {}
+    val dao: SynthesisDao = AppDatabase.get().synthesisDao()
+
+    suspend fun getByMaterialName(name: String): SynthesisDraft? =
+        dao.getByMaterialName(name)?.toDomain()
+
+    suspend fun upsert(draft: SynthesisDraft) {
+        dao.upsertDraftWithSteps(
+            draft = draft.toEntity(),
+            steps = draft.steps.map { it.toEntity(orderIndex = it.orderIndex) }
+        )
+    }
+
+    suspend fun updateStepsTimerByIndex(
+        materialName: String,
+        orderIndexes: List<Int>,
+        accumulatedMillis: Long,
+        startEpochMs: Long?
+    ) {
+        val draftId = dao.findDraftIdByName(materialName)!!
+        dao.updateStepsTimerByIndex(draftId, orderIndexes, accumulatedMillis, startEpochMs)
+    }
+
+    suspend fun deleteDraftByName(name: String): Boolean = dao.deleteDraftByName(name) > 0
 }

@@ -93,7 +93,7 @@ fun ItemPhotocatalysis(
                             append(" | ${uiState.targetPollutant.waveLength}nm")
                             append(" | ${uiState.lightSource.label} ${uiState.lightSource.wavelength}nm")
                             if (uiState.status != ItemStatus.STATUS_COMPLETE)
-                                append(" | 距离结束 ${uiState.totalMinutes - uiState.elapsedMinutes} 分钟")
+                                append("\n距离结束 ${uiState.totalMinutes - uiState.elapsedMinutes} 分钟")
                         },
                         style = MaterialTheme.typography.bodySmall
                     )

@@ -1,4 +1,4 @@
-package com.mty.exptools.util
+package com.mty.exptools.domain
 
 data class StepTimer(
     val requiredMillis: Long,           // 该步骤总时长
@@ -16,5 +16,5 @@ data class StepTimer(
     fun pause(now: Long = System.currentTimeMillis()) =
         startEpochMs?.let { copy(accumulatedMillis = accumulatedMillis + (now - it), startEpochMs = null) } ?: this
     fun complete(): StepTimer = copy(accumulatedMillis = requiredMillis, startEpochMs = null)
+    fun reset(): StepTimer = copy(accumulatedMillis = 0L, startEpochMs = null)
 }
-

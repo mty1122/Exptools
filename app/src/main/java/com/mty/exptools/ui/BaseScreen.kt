@@ -25,7 +25,7 @@ fun BaseScreen() {
         navController = topNavController,
         startDestination = HomeRoute
     ) {
-        composable< HomeRoute>(
+        composable<HomeRoute>(
             enterTransition = { EnterTransition.None },
             exitTransition = { ExitTransition.None },
             popEnterTransition = { EnterTransition.None },

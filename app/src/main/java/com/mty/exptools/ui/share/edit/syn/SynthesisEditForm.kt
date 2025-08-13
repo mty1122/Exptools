@@ -111,7 +111,7 @@ fun SynthesisEditForm(
             }
         }
 
-        if (completedAt != null) {
+        if (completedAt != null && mode == SynthesisMode.VIEW) {
             item {
                 FieldBlock(
                     title = if (completedAt > System.currentTimeMillis()) "预计完成时间：" else "完成于：",

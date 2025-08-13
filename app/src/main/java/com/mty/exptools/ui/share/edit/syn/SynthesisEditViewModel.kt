@@ -216,7 +216,8 @@ class SynthesisEditViewModel @Inject constructor(
                             _uiState.update {
                                 it.copy(
                                     mode = SynthesisMode.VIEW, running = false,
-                                    currentStepIndex = currentStepIndex
+                                    currentStepIndex = currentStepIndex,
+                                    draft = it.draft.copy(completedAt = null)
                                 )
                             }
                         }
@@ -299,6 +300,11 @@ class SynthesisEditViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(openDeleteConfirmDialog = true)
                 }
+
+            SynthesisAction.ManualCompletedAt ->
+                _uiState.update {
+                    it.copy(openManualCompleteAtDialog = true)
+                }
         }
     }
 
@@ -307,7 +313,8 @@ class SynthesisEditViewModel @Inject constructor(
             openSubsConfirmDialog = false,
             openPrevConfirmDialog = false,
             openDeleteConfirmDialog = false,
-            openCompleteConfirmDialog = false
+            openCompleteConfirmDialog = false,
+            openManualCompleteAtDialog = false
         ) }
     }
 
@@ -424,6 +431,15 @@ class SynthesisEditViewModel @Inject constructor(
         if (state.draft.completedAt == time) return
         val name = state.draft.materialName
         viewModelScope.launch { repo.setCompletedAt(name, time) }
+    }
+
+    fun setCompletedAtWithUiState(time: Long?) {
+        val state = _uiState.value
+        // 不重复更新
+        if (state.draft.completedAt == time) return
+        val name = state.draft.materialName
+        viewModelScope.launch { repo.setCompletedAt(name, time) }
+        _uiState.update { it.copy(draft = it.draft.copy(completedAt = time)) }
     }
 
 }

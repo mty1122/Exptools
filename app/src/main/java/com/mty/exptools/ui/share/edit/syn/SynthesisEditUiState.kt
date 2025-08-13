@@ -14,6 +14,7 @@ data class SynthesisEditUiState(
     val openSubsConfirmDialog: Boolean = false,
     val openDeleteConfirmDialog: Boolean = false,
     val openCompleteConfirmDialog: Boolean = false,
+    val openManualCompleteAtDialog: Boolean = false,
     val jumpTargetIndex: Int? = null,
     val error: String? = null
 )

@@ -25,7 +25,8 @@ fun SynthesisEditScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val blur by animateDpAsState(
         targetValue = if (uiState.openPrevConfirmDialog || uiState.openSubsConfirmDialog
-            || uiState.openDeleteConfirmDialog || uiState.openCompleteConfirmDialog)
+            || uiState.openDeleteConfirmDialog || uiState.openCompleteConfirmDialog
+            || uiState.openManualCompleteAtDialog)
             12.dp else 0.dp,
         animationSpec = tween(200),
         label = "edit-blur"
@@ -49,7 +50,8 @@ fun SynthesisEditScreen(
                     }
                 },
                 onToggleRun = { viewModel.onAction(SynthesisAction.ToggleRun) },
-                onDelete = { viewModel.onAction(SynthesisAction.DeleteDraft) }
+                onDelete = { viewModel.onAction(SynthesisAction.DeleteDraft) },
+                onSetCompletedAt = { viewModel.onAction(SynthesisAction.ManualCompletedAt) }
             )
         }
     ) { inner ->
@@ -108,6 +110,17 @@ fun SynthesisEditScreen(
                 },
                 dialogTitle = "确认删除当前合成步骤？",
                 dialogText = "此操作不可撤回！"
+            )
+        }
+        uiState.openManualCompleteAtDialog -> {
+            ManualCompletedAtDialog(
+                visible = true,
+                initialCompletedAt = uiState.draft.completedAt,
+                onConfirm = {
+                    viewModel.setCompletedAtWithUiState(it)
+                    viewModel.closeConfirmDialog()
+                },
+                onDismiss = { viewModel.closeConfirmDialog() }
             )
         }
     }

@@ -2,6 +2,7 @@ package com.mty.exptools.ui.share.edit.syn
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -27,6 +28,7 @@ fun SynthesisEditTopBar(
     onSave: () -> Unit,
     onEdit: () -> Unit,
     onSetAlarm: () -> Unit,
+    onSetCompletedAt: () -> Unit,
     onToggleRun: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -48,6 +50,8 @@ fun SynthesisEditTopBar(
                     IconButton(onClick = onToggleRun) {
                         Icon(if (running) Icons.Default.Pause else Icons.Default.PlayArrow, null)
                     }
+                } else {
+                    IconButton(onClick = onSetCompletedAt) { Icon(Icons.Default.AccessTime, null) }
                 }
                 IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, null) }
             }

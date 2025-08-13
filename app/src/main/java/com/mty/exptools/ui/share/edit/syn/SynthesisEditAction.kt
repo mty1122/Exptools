@@ -22,9 +22,9 @@ sealed interface SynthesisAction {
 
     /** 开/停当前步骤（只改 StepTimer 三字段） */
     object ToggleRun : SynthesisAction
-    /** 将当前步骤标记完成 → 自动跳到下一步并暂停 */
-    object CompleteCurrentStep : SynthesisAction
-    object GoToPreviousStep : SynthesisAction
+    /** 用来跳转到指定步骤 */
+    data class JumpStep(val index: Int) : SynthesisAction
+
     /** 可选：手动指定当前步骤（浏览模式下高亮/开始于某步） */
     data class SetCurrentIndex(val index: Int) : SynthesisAction
 }

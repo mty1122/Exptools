@@ -128,15 +128,32 @@ class SynthesisEditViewModel @Inject constructor(
                 }
 
             is SynthesisAction.RemoveStep ->
-                _uiState.update {
-                    val newList = it.draft.steps.filterNot { s -> s.orderIndex == a.orderIndex }
-                    it.copy(
-                        draft = it.draft.copy(steps = newList.ifEmpty { listOf(SynthesisStep()) }),
-                        currentStepIndex = it.currentStepIndex.coerceAtMost(
-                            (newList.size - 1).coerceAtLeast(
-                                0
-                            )
-                        )
+                _uiState.update { state ->
+                    val removed = a.orderIndex
+
+                    val filtered = state.draft.steps
+                        .filterNot { it.orderIndex == removed }
+
+                    val normalized = if (filtered.isEmpty()) {
+                        listOf(SynthesisStep())
+                    } else {
+                        filtered
+                            //.sortedBy { it.orderIndex }       // 目前场景不需要排序
+                            .mapIndexed { idx, s -> s.copy(orderIndex = idx) } // 规范成 0..N
+                    }
+
+                    val newCurrent = when {
+                        state.currentStepIndex > removed -> state.currentStepIndex - 1
+                        state.currentStepIndex >= normalized.size -> normalized.lastIndex
+                        else -> state.currentStepIndex
+                    }
+
+                    val newRunning = normalized[newCurrent].timer.isRunning()
+
+                    state.copy(
+                        draft = state.draft.copy(steps = normalized),
+                        currentStepIndex = newCurrent,
+                        running = newRunning
                     )
                 }
 
@@ -180,20 +197,37 @@ class SynthesisEditViewModel @Inject constructor(
                     )
                 }
 
-            SynthesisAction.CompleteCurrentStep -> {
-                val hasNext = uiState.value.currentStepIndex < _uiState.value.draft.steps.lastIndex
-                _uiState.update {
-                    if (hasNext)
-                        it.copy(openNextConfirmDialog = true)
-                    else
-                        it.copy(openCompleteConfirmDialog = true)
-                }
-        }
+            is SynthesisAction.JumpStep -> {
+                val targetIdx = a.index
+                val currentIdx = _uiState.value.currentStepIndex
 
-            SynthesisAction.GoToPreviousStep ->
-                _uiState.update {
-                    it.copy(openPrevConfirmDialog = true)
+                when {
+                    targetIdx < currentIdx -> {
+                        _uiState.update {
+                            it.copy(
+                                openPrevConfirmDialog = true,
+                                jumpTargetIndex = targetIdx
+                            )
+                        }
+                    }
+                    targetIdx > currentIdx -> {
+                        _uiState.update {
+                            it.copy(
+                                openSubsConfirmDialog = true,
+                                jumpTargetIndex = targetIdx
+                            )
+                        }
+                    }
+                    // 对于最后一步，如果还未完成，点击自身为完成
+                    else -> {
+                        val hasNext = uiState.value.currentStepIndex < _uiState.value.draft.steps.lastIndex
+                        if (!hasNext && !uiState.value.draft.isFinished)
+                            _uiState.update {
+                                it.copy(openCompleteConfirmDialog = true)
+                            }
+                    }
                 }
+            }
 
             is SynthesisAction.SetCurrentIndex ->
                 _uiState.update { it.copy(currentStepIndex = a.index.coerceIn(0, it.draft.steps.lastIndex)) }
@@ -207,7 +241,7 @@ class SynthesisEditViewModel @Inject constructor(
 
     fun closeConfirmDialog() {
         _uiState.update { it.copy(
-            openNextConfirmDialog = false,
+            openSubsConfirmDialog = false,
             openPrevConfirmDialog = false,
             openDeleteConfirmDialog = false,
             openCompleteConfirmDialog = false
@@ -241,33 +275,62 @@ class SynthesisEditViewModel @Inject constructor(
     }
 
     fun goToPreviousStep() {
+        val targetIndex = uiState.value.jumpTargetIndex
+        if (targetIndex == null) return
         _uiState.update { state ->
-            val idx = state.currentStepIndex
-            if (idx <= 0) return@update state
+            val currentIndex = state.currentStepIndex
+            if (currentIndex <= 0 || targetIndex >= currentIndex) return@update state
             val steps = state.draft.steps.toMutableList()
-            // 1) 复位“当前步骤”
-            steps.getOrNull(idx)?.let { cur ->
-                steps[idx] = cur.copy(timer = cur.timer.reset())
-            }
-            // 2) 复位“上一步骤”的计时并跳转
-            val prevIdx = idx - 1
-            steps.getOrNull(prevIdx)?.let { prev ->
-                steps[prevIdx] = prev.copy(timer = prev.timer.reset())
+            if (currentIndex > steps.lastIndex) return@update state
+
+            // 复位沿路所有步骤
+            for (idx in targetIndex until currentIndex + 1) {
+                steps[idx] = steps[idx].copy(timer = steps[idx].timer.reset())
             }
 
             // 持久化时间信息
             viewModelScope.launch {
                 repo.updateStepsTimerByIndex(
                     materialName = state.draft.materialName,
-                    orderIndexes = listOf(idx - 1, idx),
-                    accumulatedMillis = steps[idx].timer.accumulatedMillis,
-                    startEpochMs = steps[idx].timer.startEpochMs
+                    orderIndexes = (targetIndex until currentIndex + 1).toList(),
+                    accumulatedMillis = steps[targetIndex].timer.accumulatedMillis,
+                    startEpochMs = steps[targetIndex].timer.startEpochMs
                 )
             }
 
             state.copy(
                 draft = state.draft.copy(steps = steps),
-                currentStepIndex = prevIdx,
+                currentStepIndex = targetIndex,
+                running = false // 自动暂停
+            )
+        }
+    }
+
+    fun goToSubsequentStep() {
+        val targetIndex = uiState.value.jumpTargetIndex
+        if (targetIndex == null) return
+        _uiState.update { state ->
+            val currentIndex = state.currentStepIndex
+            if (currentIndex < 0 || targetIndex <= currentIndex) return@update state
+            val steps = state.draft.steps.toMutableList()
+            if (targetIndex > steps.lastIndex) return@update state
+
+            // 完成沿路所有步骤
+            for (idx in currentIndex until targetIndex) {
+                steps[idx] = steps[idx].copy(timer = steps[idx].timer.complete())
+            }
+            // 持久化时间信息
+            viewModelScope.launch {
+                repo.updateStepsTimerByIndex(
+                    materialName = state.draft.materialName,
+                    orderIndexes = (currentIndex until targetIndex).toList(),
+                    accumulatedMillis = steps[currentIndex].timer.accumulatedMillis,
+                    startEpochMs = steps[currentIndex].timer.startEpochMs
+                )
+            }
+            state.copy(
+                draft = state.draft.copy(steps = steps),
+                currentStepIndex = targetIndex,
                 running = false // 自动暂停
             )
         }

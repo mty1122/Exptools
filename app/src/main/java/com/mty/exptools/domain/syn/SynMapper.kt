@@ -1,16 +1,11 @@
 package com.mty.exptools.domain.syn
 
-import android.icu.util.TimeUnit
 import com.mty.exptools.domain.StepTimer
 import com.mty.exptools.logic.model.syn.SynthesisDraftEntity
 import com.mty.exptools.logic.model.syn.SynthesisDraftWithSteps
 import com.mty.exptools.logic.model.syn.SynthesisStepEntity
-
-// Domain <-> Entity 中建议把 enum 转 String
-private fun String.toTimeUnit(): TimeUnit =
-    if (this == "HOUR") TimeUnit.HOUR else TimeUnit.MINUTE
-
-private fun TimeUnit.asString(): String = if (this == TimeUnit.HOUR) "HOUR" else "MINUTE"
+import com.mty.exptools.util.toTimeUnit
+import com.mty.exptools.util.asString
 
 fun SynthesisDraftWithSteps.toDomain(): SynthesisDraft =
     SynthesisDraft(

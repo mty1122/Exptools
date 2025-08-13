@@ -10,16 +10,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -35,6 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mty.exptools.domain.syn.SynthesisDraft
 import com.mty.exptools.domain.syn.SynthesisStep
+import com.mty.exptools.util.MillisTime
+import com.mty.exptools.util.asString
+import java.util.Locale
 
 @Composable
 fun SynthesisEditForm(
@@ -93,7 +93,9 @@ fun SynthesisEditForm(
                 onContentChange = { onAction(SynthesisAction.UpdateStepContent(step.orderIndex, it)) },
                 onDurationChange = { onAction(SynthesisAction.UpdateStepDuration(step.orderIndex, it, step.unit)) },
                 onUnitChange = { onAction(SynthesisAction.UpdateStepUnit(step.orderIndex, it)) },
-                onRemove = { onAction(SynthesisAction.RemoveStep(step.orderIndex)) }
+                onRemove = { onAction(SynthesisAction.RemoveStep(step.orderIndex)) },
+                clickable = mode == SynthesisMode.VIEW,
+                onClick = { onAction(SynthesisAction.JumpStep(idx)) }
             )
         }
 
@@ -105,39 +107,6 @@ fun SynthesisEditForm(
                     text = "＋ 添加步骤",
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) }
-            }
-        }
-
-        if (mode == SynthesisMode.VIEW) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    val hasPrevious = currentStepIndex > 0
-                    val hasNext = currentStepIndex < draft.steps.lastIndex
-                    // 返回上一步按钮（如果不是第一步才显示）
-                    if (hasPrevious) {
-                        Button(onClick = { onAction(SynthesisAction.GoToPreviousStep) }) {
-                            Text("返回上一步并暂停")
-                        }
-                    }
-
-                    if (hasPrevious && (hasNext || !draft.isFinished)) {
-                        Spacer(Modifier.width(20.dp))
-                    }
-
-                    // 前往下一步按钮（如果不是最后一步才显示）
-                    if (hasNext) {
-                        Button(onClick = { onAction(SynthesisAction.CompleteCurrentStep) }) {
-                            Text("进入下一步并暂停")
-                        }
-                    } else if (!draft.isFinished) {
-                        Button(onClick = { onAction(SynthesisAction.CompleteCurrentStep) }) {
-                            Text("  完成当前步骤  ")
-                        }
-                    }
-                }
             }
         }
     }
@@ -181,6 +150,8 @@ private fun StepCard(
     step: SynthesisStep,
     editable: Boolean,
     highlight: Boolean,
+    clickable: Boolean,
+    onClick: () -> Unit,
     onContentChange: (String) -> Unit,
     onDurationChange: (String) -> Unit,
     onUnitChange: (TimeUnit) -> Unit,
@@ -191,7 +162,9 @@ private fun StepCard(
         shape = RoundedCornerShape(12.dp),
         tonalElevation = 2.dp,
         border = BorderStroke(1.dp, borderColor),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = clickable, onClick = { onClick() })
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("步骤 ${index + 1}", style = MaterialTheme.typography.titleSmall)
@@ -225,11 +198,24 @@ private fun StepCard(
                 }
             } else {
                 // 浏览模式：只读展示
-                val durText = buildString {
+                val text = buildString {
+                    append("时长：")
                     append(step.duration())
-                    append(if (step.unit == TimeUnit.HOUR) " 小时" else " 分钟")
+                    append(" ")
+                    append(step.unit.asString())
+                    when {
+                        step.timer.isFinished() -> append(" | 已完成")
+                        step.timer.neverStart() -> append(" | 未开始")
+                        else -> {
+                            append(" | 剩余：")
+                            val time = MillisTime(step.timer.remaining()).toTime()
+                            append(String.format(Locale.PRC, "%.1f", time.value))
+                            append(" ")
+                            append(time.unit.asString())
+                        }
+                    }
                 }
-                Text("时长：$durText")
+                Text(text)
             }
         }
     }

@@ -24,7 +24,7 @@ fun SynthesisEditScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val blur by animateDpAsState(
-        targetValue = if (uiState.openPrevConfirmDialog || uiState.openNextConfirmDialog
+        targetValue = if (uiState.openPrevConfirmDialog || uiState.openSubsConfirmDialog
             || uiState.openDeleteConfirmDialog || uiState.openCompleteConfirmDialog)
             12.dp else 0.dp,
         animationSpec = tween(200),
@@ -65,15 +65,15 @@ fun SynthesisEditScreen(
     }
 
     when {
-        uiState.openNextConfirmDialog -> {
+        uiState.openSubsConfirmDialog -> {
             AlertDialogShared(
                 onDismissRequest = { viewModel.closeConfirmDialog() },
                 onConfirmation = {
-                    viewModel.completeCurrentStep()
+                    viewModel.goToSubsequentStep()
                     viewModel.closeConfirmDialog()
                 },
-                dialogTitle = "确认进入下一步？",
-                dialogText = "此操作不可撤回！进入下一步会自动暂停，如需开始请点击开始按钮。"
+                dialogTitle = "确认跳转至第${uiState.jumpTargetIndex?.plus(1)}步？",
+                dialogText = "此操作不可撤回！该步之前的所有步骤都会变为已完成状态。"
             )
         }
         uiState.openPrevConfirmDialog -> {
@@ -83,8 +83,8 @@ fun SynthesisEditScreen(
                     viewModel.goToPreviousStep()
                     viewModel.closeConfirmDialog()
                 },
-                dialogTitle = "确认返回上一步？",
-                dialogText = "此操作不可撤回！返回上一步会自动暂停，如需开始请点击开始按钮。"
+                dialogTitle = "确认跳转至第${uiState.jumpTargetIndex?.plus(1)}步？",
+                dialogText = "此操作不可撤回！该步之后的所有步骤都会变为未完成状态。"
             )
         }
         uiState.openCompleteConfirmDialog -> {

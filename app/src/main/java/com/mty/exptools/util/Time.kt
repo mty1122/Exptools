@@ -19,13 +19,17 @@ value class MillisTime(val millis: Long) {
     fun toHours(): Float = millis / OneHour.millis.toFloat()
     fun toDays(): Float = millis / OneDay.millis.toFloat()
 
-    operator fun minus(other: MillisTime): MillisTime = MillisTime(this.millis - other.millis)
-
     fun toTime(): Time = when {
         millis < OneMinute.millis -> Time(toSeconds(), TimeUnit.SECOND)
         millis < OneHour.millis -> Time(toMinutes(), TimeUnit.MINUTE)
         millis < OneDay.millis -> Time(toHours(), TimeUnit.HOUR)
         else -> Time(toDays(), TimeUnit.DAY)
+    }
+
+    fun toDateTime(): String {
+        val currentDateTime = java.time.Instant.ofEpochMilli(millis)
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        return currentDateTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
     }
 }
 

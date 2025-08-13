@@ -12,7 +12,7 @@ import com.mty.exptools.logic.model.syn.SynthesisStepEntity
 interface SynthesisDao {
 
     /**
-     * 监听草稿 + 步骤
+     * 获取草稿 + 步骤
      */
     @Transaction
     @Query("SELECT * FROM synthesis_draft WHERE material_name = :name LIMIT 1")
@@ -82,5 +82,8 @@ interface SynthesisDao {
 
     @Query("DELETE FROM synthesis_draft WHERE material_name = :name")
     suspend fun deleteDraftByName(name: String): Int
+
+    @Query("UPDATE synthesis_draft SET completed_at = :completedTime, updated_at = :updateTime WHERE id = :id")
+    suspend fun setCompletedAt(id: Long, completedTime: Long?, updateTime: Long)
 
 }

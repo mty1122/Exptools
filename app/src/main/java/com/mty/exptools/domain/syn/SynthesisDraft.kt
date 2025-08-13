@@ -5,6 +5,7 @@ data class SynthesisDraft(
     val rawMaterials: String = "",
     val conditionSummary: String = "",
     val expDetails: String = "",
+    val completedAt: Long? = null,
     val steps: List<SynthesisStep> = listOf(SynthesisStep())
 ) {
     val currentStepIndex: Int

@@ -60,6 +60,7 @@ fun SynthesisEditScreen(
             mode = uiState.mode,
             draft = uiState.draft,
             currentStepIndex = uiState.currentStepIndex,
+            completedAt = uiState.draft.completedAt,
             onAction = viewModel::onAction // 单入口事件，沿用你前面的写法
         )
     }
@@ -91,7 +92,7 @@ fun SynthesisEditScreen(
             AlertDialogShared(
                 onDismissRequest = { viewModel.closeConfirmDialog() },
                 onConfirmation = {
-                    viewModel.completeCurrentStep()
+                    viewModel.completeLastStep()
                     viewModel.closeConfirmDialog()
                 },
                 dialogTitle = "确认完成当前步骤？",

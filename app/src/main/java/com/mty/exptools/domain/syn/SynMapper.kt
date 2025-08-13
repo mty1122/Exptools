@@ -13,6 +13,7 @@ fun SynthesisDraftWithSteps.toDomain(): SynthesisDraft =
         rawMaterials = draft.rawMaterials,
         conditionSummary = draft.conditionSummary,
         expDetails = draft.expDetails,
+        completedAt = draft.completedAt,
         steps = steps
             .sortedBy { it.orderIndex }
             .map {
@@ -36,6 +37,7 @@ fun SynthesisDraft.toEntity(): SynthesisDraftEntity =
         rawMaterials = rawMaterials,
         conditionSummary = conditionSummary,
         expDetails = expDetails,
+        completedAt = completedAt,
         updatedAt = System.currentTimeMillis()
     )
 

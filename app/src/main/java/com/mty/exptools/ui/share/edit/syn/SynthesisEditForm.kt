@@ -42,6 +42,7 @@ fun SynthesisEditForm(
     mode: SynthesisMode,
     draft: SynthesisDraft,
     currentStepIndex: Int,
+    completedAt: Long?,
     onAction: (SynthesisAction) -> Unit
 ) {
     LazyColumn(
@@ -107,6 +108,17 @@ fun SynthesisEditForm(
                     text = "＋ 添加步骤",
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) }
+            }
+        }
+
+        if (completedAt != null) {
+            item {
+                FieldBlock(
+                    title = if (completedAt > System.currentTimeMillis()) "预计完成时间：" else "完成于：",
+                    value = MillisTime(completedAt).toDateTime(),
+                    editable = false,
+                    onValueChange = {}
+                )
             }
         }
     }

@@ -31,4 +31,9 @@ class SynthesisRepository @Inject constructor(){
     }
 
     suspend fun deleteDraftByName(name: String): Boolean = dao.deleteDraftByName(name) > 0
+
+    suspend fun setCompletedAt(materialName: String, completedTime: Long?) {
+        val draftId = dao.findDraftIdByName(materialName)!!
+        dao.setCompletedAt(draftId, completedTime, System.currentTimeMillis())
+    }
 }

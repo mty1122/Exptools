@@ -159,13 +159,68 @@ class SynthesisEditViewModel @Inject constructor(
 
             SynthesisAction.Save -> viewModelScope.launch {
                 // 持久化 draft
-                val current = _uiState.value.draft
-                repo.upsert(current)
-                _uiState.update {
-                    it.copy(
-                        mode = SynthesisMode.VIEW, running = false,
-                        currentStepIndex = current.currentStepIndex
-                    )
+                val currentState = _uiState.value
+                val currentDraft = currentState.draft
+                repo.upsert(currentDraft)
+
+                // 编辑后当前步骤索引
+                val currentStepIndex = currentDraft.currentStepIndex
+
+                val now = System.currentTimeMillis()
+                var completedAt: Long? = null
+                when {
+                    // 若draft已完成，则处理
+                    currentDraft.isFinished -> {
+                        // 删除所有未完成的步骤
+                        if (currentDraft.completedAt == null || currentDraft.completedAt > now) {
+                            setCompletedAt(now)
+                            completedAt = now
+                        // 删除操作，且原本就已完成
+                        } else {
+                            completedAt = currentDraft.completedAt
+                        }
+                        _uiState.update {
+                            it.copy(
+                                mode = SynthesisMode.VIEW, running = false,
+                                currentStepIndex = currentStepIndex,
+                                draft = it.draft.copy(completedAt = completedAt)
+                            )
+                        }
+                    }
+                    // 若draft未完成，则暂停
+                    else -> {
+                        val steps = currentState.draft.steps.toMutableList()
+                        val cur = steps.getOrNull(currentStepIndex) ?: return@launch
+                        // 若未暂停，则进行暂停
+                        if (cur.timer.isRunning()) {
+                            val newTimer = cur.timer.pause()
+                            steps[currentStepIndex] = cur.copy(timer = newTimer)
+                            repo.updateStepsTimerByIndex(
+                                materialName = currentState.draft.materialName,
+                                orderIndexes = listOf(currentStepIndex),
+                                accumulatedMillis = newTimer.accumulatedMillis,
+                                startEpochMs = newTimer.startEpochMs
+                            )
+                            setCompletedAt(null)
+                            _uiState.update {
+                                it.copy(
+                                    mode = SynthesisMode.VIEW, running = false,
+                                    currentStepIndex = currentStepIndex,
+                                    draft = it.draft.copy(steps = steps, completedAt = null)
+                                )
+                            }
+                        // 若已暂停，则可以不用处理完成时间
+                        } else {
+                            // 这里还是需要设置一次null，因为如果原本是running，但是running的那个步骤被删除了，则不会变为null
+                            setCompletedAt(null)
+                            _uiState.update {
+                                it.copy(
+                                    mode = SynthesisMode.VIEW, running = false,
+                                    currentStepIndex = currentStepIndex
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -191,8 +246,16 @@ class SynthesisEditViewModel @Inject constructor(
                         )
                     }
 
+                    val now = System.currentTimeMillis()
+                    var remaining = 0L
+                    for (index in idx until steps.size) {
+                        remaining += steps[index].timer.remaining()
+                    }
+                    val completedAt = if (newTimer.isRunning()) now + remaining else null
+                    setCompletedAt(completedAt)
+
                     state.copy(
-                        draft = state.draft.copy(steps = steps),
+                        draft = state.draft.copy(steps = steps, completedAt = completedAt),
                         running = newTimer.isRunning()
                     )
                 }
@@ -248,13 +311,12 @@ class SynthesisEditViewModel @Inject constructor(
         ) }
     }
 
-    fun completeCurrentStep() {
+    fun completeLastStep() {
         _uiState.update { state ->
             val idx = state.currentStepIndex
             val steps = state.draft.steps.toMutableList()
             val cur = steps.getOrNull(idx) ?: return@update state
             steps[idx] = cur.copy(timer = cur.timer.complete())
-            val hasNext = idx < steps.lastIndex
 
             // 持久化时间信息
             viewModelScope.launch {
@@ -266,9 +328,11 @@ class SynthesisEditViewModel @Inject constructor(
                 )
             }
 
+            val now = System.currentTimeMillis()
+            setCompletedAt(now)
+
             state.copy(
-                draft = state.draft.copy(steps = steps),
-                currentStepIndex = if (hasNext) idx + 1 else idx,
+                draft = state.draft.copy(steps = steps, completedAt = now),
                 running = false // 按需求：自动暂停
             )
         }
@@ -298,8 +362,10 @@ class SynthesisEditViewModel @Inject constructor(
                 )
             }
 
+            setCompletedAt(null)
+
             state.copy(
-                draft = state.draft.copy(steps = steps),
+                draft = state.draft.copy(steps = steps, completedAt = null),
                 currentStepIndex = targetIndex,
                 running = false // 自动暂停
             )
@@ -328,8 +394,11 @@ class SynthesisEditViewModel @Inject constructor(
                     startEpochMs = steps[currentIndex].timer.startEpochMs
                 )
             }
+
+            setCompletedAt(null)
+
             state.copy(
-                draft = state.draft.copy(steps = steps),
+                draft = state.draft.copy(steps = steps, completedAt = null),
                 currentStepIndex = targetIndex,
                 running = false // 自动暂停
             )
@@ -347,6 +416,14 @@ class SynthesisEditViewModel @Inject constructor(
                 loading = false
             )
         }
+    }
+
+    private fun setCompletedAt(time: Long?) {
+        val state = _uiState.value
+        // 不重复更新
+        if (state.draft.completedAt == time) return
+        val name = state.draft.materialName
+        viewModelScope.launch { repo.setCompletedAt(name, time) }
     }
 
 }

@@ -12,4 +12,7 @@ data class SynthesisDraft(
             ?.orderIndex
             ?: steps.lastOrNull()?.orderIndex
             ?: 0
+
+    val isFinished: Boolean
+        get() = steps.lastOrNull()?.timer?.isFinished() == true
 }

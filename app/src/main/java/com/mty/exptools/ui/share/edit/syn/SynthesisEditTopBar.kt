@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 fun SynthesisEditTopBar(
     mode: SynthesisMode,
     running: Boolean,
+    isFinished: Boolean,
     onBack: () -> Unit,
     onLoadOther: () -> Unit,
     onSave: () -> Unit,
@@ -30,7 +31,7 @@ fun SynthesisEditTopBar(
     onDelete: () -> Unit
 ) {
     TopAppBar(
-        title = { Text(if (mode == SynthesisMode.EDIT) "合成步骤编辑" else "合成步骤浏览") },
+        title = { Text(if (mode == SynthesisMode.EDIT) "合成步骤" else "合成步骤") },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -42,9 +43,11 @@ fun SynthesisEditTopBar(
                 IconButton(onClick = onSave) { Icon(Icons.Default.Save, null) }
             } else {
                 IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null) }
-                IconButton(onClick = onSetAlarm) { Icon(Icons.Default.Alarm, null) }
-                IconButton(onClick = onToggleRun) {
-                    Icon(if (running) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                if (!isFinished) {
+                    IconButton(onClick = onSetAlarm) { Icon(Icons.Default.Alarm, null) }
+                    IconButton(onClick = onToggleRun) {
+                        Icon(if (running) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                    }
                 }
                 IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, null) }
             }

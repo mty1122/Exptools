@@ -80,8 +80,13 @@ class SynthesisEditViewModel @Inject constructor(
 
             is SynthesisAction.UpdateStepContent ->
                 _uiState.update {
-                    it.copy(draft = it.draft.copy(
-                        steps = it.draft.steps.map { s -> if (s.orderIndex == a.orderIndex) s.copy(content = a.v) else s }
+                    it.copy(
+                        draft = it.draft.copy(
+                        steps = it.draft.steps.map { s ->
+                            if (s.orderIndex == a.orderIndex) s.copy(
+                                content = a.v
+                            ) else s
+                        }
                     ))
                 }
 
@@ -89,7 +94,8 @@ class SynthesisEditViewModel @Inject constructor(
                 _uiState.update {
                     val n = a.numberText.toIntOrNull()?.coerceAtLeast(0) ?: 0
                     val millis = if (a.unit == TimeUnit.HOUR) n * 60L * 60_000L else n * 60_000L
-                    it.copy(draft = it.draft.copy(
+                    it.copy(
+                        draft = it.draft.copy(
                         steps = it.draft.steps.map { s ->
                             if (s.orderIndex == a.orderIndex) s.copy(
                                 unit = a.unit,
@@ -101,8 +107,13 @@ class SynthesisEditViewModel @Inject constructor(
 
             is SynthesisAction.UpdateStepUnit ->
                 _uiState.update {
-                    it.copy(draft = it.draft.copy(
-                        steps = it.draft.steps.map { s -> if (s.orderIndex == a.orderIndex) s.copy(unit = a.unit) else s }
+                    it.copy(
+                        draft = it.draft.copy(
+                        steps = it.draft.steps.map { s ->
+                            if (s.orderIndex == a.orderIndex) s.copy(
+                                unit = a.unit
+                            ) else s
+                        }
                     ))
                 }
 
@@ -121,7 +132,11 @@ class SynthesisEditViewModel @Inject constructor(
                     val newList = it.draft.steps.filterNot { s -> s.orderIndex == a.orderIndex }
                     it.copy(
                         draft = it.draft.copy(steps = newList.ifEmpty { listOf(SynthesisStep()) }),
-                        currentStepIndex = it.currentStepIndex.coerceAtMost((newList.size - 1).coerceAtLeast(0))
+                        currentStepIndex = it.currentStepIndex.coerceAtMost(
+                            (newList.size - 1).coerceAtLeast(
+                                0
+                            )
+                        )
                     )
                 }
 
@@ -129,8 +144,12 @@ class SynthesisEditViewModel @Inject constructor(
                 // 持久化 draft
                 val current = _uiState.value.draft
                 repo.upsert(current)
-                _uiState.update { it.copy(mode = SynthesisMode.VIEW, running = false,
-                    currentStepIndex = current.currentStepIndex) }
+                _uiState.update {
+                    it.copy(
+                        mode = SynthesisMode.VIEW, running = false,
+                        currentStepIndex = current.currentStepIndex
+                    )
+                }
             }
 
             SynthesisAction.Edit ->
@@ -141,7 +160,8 @@ class SynthesisEditViewModel @Inject constructor(
                     val idx = state.currentStepIndex
                     val steps = state.draft.steps.toMutableList()
                     val cur = steps.getOrNull(idx) ?: return@update state
-                    val newTimer = if (cur.timer.isRunning()) cur.timer.pause() else cur.timer.start()
+                    val newTimer =
+                        if (cur.timer.isRunning()) cur.timer.pause() else cur.timer.start()
                     steps[idx] = cur.copy(timer = newTimer)
 
                     // 持久化时间信息
@@ -160,10 +180,15 @@ class SynthesisEditViewModel @Inject constructor(
                     )
                 }
 
-            SynthesisAction.CompleteCurrentStep ->
+            SynthesisAction.CompleteCurrentStep -> {
+                val hasNext = uiState.value.currentStepIndex < _uiState.value.draft.steps.lastIndex
                 _uiState.update {
-                    it.copy(openNextConfirmDialog = true)
+                    if (hasNext)
+                        it.copy(openNextConfirmDialog = true)
+                    else
+                        it.copy(openCompleteConfirmDialog = true)
                 }
+        }
 
             SynthesisAction.GoToPreviousStep ->
                 _uiState.update {
@@ -184,7 +209,8 @@ class SynthesisEditViewModel @Inject constructor(
         _uiState.update { it.copy(
             openNextConfirmDialog = false,
             openPrevConfirmDialog = false,
-            openDeleteConfirmDialog = false
+            openDeleteConfirmDialog = false,
+            openCompleteConfirmDialog = false
         ) }
     }
 
@@ -221,9 +247,7 @@ class SynthesisEditViewModel @Inject constructor(
             val steps = state.draft.steps.toMutableList()
             // 1) 复位“当前步骤”
             steps.getOrNull(idx)?.let { cur ->
-                if (cur.timer.isRunning()) {
-                    steps[idx] = cur.copy(timer = cur.timer.reset())
-                }
+                steps[idx] = cur.copy(timer = cur.timer.reset())
             }
             // 2) 复位“上一步骤”的计时并跳转
             val prevIdx = idx - 1

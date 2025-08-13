@@ -25,7 +25,8 @@ fun SynthesisEditScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val blur by animateDpAsState(
         targetValue = if (uiState.openPrevConfirmDialog || uiState.openNextConfirmDialog
-            || uiState.openDeleteConfirmDialog) 12.dp else 0.dp, // 背景模糊半径
+            || uiState.openDeleteConfirmDialog || uiState.openCompleteConfirmDialog)
+            12.dp else 0.dp,
         animationSpec = tween(200),
         label = "edit-blur"
     )
@@ -36,6 +37,7 @@ fun SynthesisEditScreen(
             SynthesisEditTopBar(
                 mode = uiState.mode,
                 running = uiState.running,
+                isFinished = uiState.draft.isFinished,
                 onBack = onBack,
                 onLoadOther = onPickOther,
                 onSave = { viewModel.onAction(SynthesisAction.Save) },
@@ -83,6 +85,17 @@ fun SynthesisEditScreen(
                 },
                 dialogTitle = "确认返回上一步？",
                 dialogText = "此操作不可撤回！返回上一步会自动暂停，如需开始请点击开始按钮。"
+            )
+        }
+        uiState.openCompleteConfirmDialog -> {
+            AlertDialogShared(
+                onDismissRequest = { viewModel.closeConfirmDialog() },
+                onConfirmation = {
+                    viewModel.completeCurrentStep()
+                    viewModel.closeConfirmDialog()
+                },
+                dialogTitle = "确认完成当前步骤？",
+                dialogText = "此操作不可撤回！完成当前步骤后，所有步骤均已完成。"
             )
         }
         uiState.openDeleteConfirmDialog -> {

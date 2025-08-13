@@ -13,5 +13,6 @@ data class SynthesisEditUiState(
     val openPrevConfirmDialog: Boolean = false,
     val openNextConfirmDialog: Boolean = false,
     val openDeleteConfirmDialog: Boolean = false,
+    val openCompleteConfirmDialog: Boolean = false,
     val error: String? = null
 )

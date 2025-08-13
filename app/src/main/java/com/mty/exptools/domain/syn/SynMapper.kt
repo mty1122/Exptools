@@ -34,14 +34,14 @@ fun SynthesisDraftWithSteps.toDomain(): SynthesisDraft =
             }
     )
 
-fun SynthesisDraft.toEntity(now: Long = System.currentTimeMillis()): SynthesisDraftEntity =
+fun SynthesisDraft.toEntity(): SynthesisDraftEntity =
     SynthesisDraftEntity(
         // id 由数据库维持
         materialName = materialName,
         rawMaterials = rawMaterials,
         conditionSummary = conditionSummary,
         expDetails = expDetails,
-        updatedAt = now
+        updatedAt = System.currentTimeMillis()
     )
 
 fun SynthesisStep.toEntity(orderIndex: Int): SynthesisStepEntity =

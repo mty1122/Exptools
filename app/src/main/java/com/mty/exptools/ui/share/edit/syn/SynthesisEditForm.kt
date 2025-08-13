@@ -114,21 +114,27 @@ fun SynthesisEditForm(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
+                    val hasPrevious = currentStepIndex > 0
+                    val hasNext = currentStepIndex < draft.steps.lastIndex
                     // 返回上一步按钮（如果不是第一步才显示）
-                    if (currentStepIndex > 0) {
+                    if (hasPrevious) {
                         Button(onClick = { onAction(SynthesisAction.GoToPreviousStep) }) {
                             Text("返回上一步并暂停")
                         }
                     }
 
-                    if (currentStepIndex > 0 && currentStepIndex < draft.steps.lastIndex) {
+                    if (hasPrevious && (hasNext || !draft.isFinished)) {
                         Spacer(Modifier.width(20.dp))
                     }
 
                     // 前往下一步按钮（如果不是最后一步才显示）
-                    if (currentStepIndex < draft.steps.lastIndex) {
+                    if (hasNext) {
                         Button(onClick = { onAction(SynthesisAction.CompleteCurrentStep) }) {
                             Text("进入下一步并暂停")
+                        }
+                    } else if (!draft.isFinished) {
+                        Button(onClick = { onAction(SynthesisAction.CompleteCurrentStep) }) {
+                            Text("  完成当前步骤  ")
                         }
                     }
                 }

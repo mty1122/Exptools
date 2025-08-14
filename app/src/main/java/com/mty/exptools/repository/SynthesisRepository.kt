@@ -5,6 +5,7 @@ import com.mty.exptools.domain.syn.toDomain
 import com.mty.exptools.domain.syn.toEntity
 import com.mty.exptools.logic.dao.AppDatabase
 import com.mty.exptools.logic.dao.SynthesisDao
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class SynthesisRepository @Inject constructor(){
@@ -36,4 +37,11 @@ class SynthesisRepository @Inject constructor(){
         val draftId = dao.findDraftIdByName(materialName)!!
         dao.setCompletedAt(draftId, completedTime, System.currentTimeMillis())
     }
+
+    suspend fun findDraftIdByName(name: String): Long? = dao.findDraftIdByName(name)
+
+    fun observeAllDrafts() = dao.observeAllDraftWithSteps()
+        .map {
+            it.map { it.toDomain() }
+        }
 }

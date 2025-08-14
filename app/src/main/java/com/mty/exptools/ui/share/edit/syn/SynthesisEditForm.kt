@@ -43,6 +43,7 @@ fun SynthesisEditForm(
     currentStepIndex: Int,
     completedAt: Long?,
     tick: Int,
+    nameEditable: Boolean,
     onAction: (SynthesisAction) -> Unit
 ) {
     LazyColumn(
@@ -54,7 +55,7 @@ fun SynthesisEditForm(
             FieldBlock(
                 title = "材料名称",
                 value = draft.materialName,
-                editable = mode == SynthesisMode.EDIT,
+                editable = mode == SynthesisMode.EDIT && nameEditable,
                 onValueChange = { onAction(SynthesisAction.UpdateMaterial(it)) }
             )
         }

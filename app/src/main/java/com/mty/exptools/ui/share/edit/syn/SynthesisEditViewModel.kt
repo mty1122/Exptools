@@ -13,8 +13,10 @@ import com.mty.exptools.util.toast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -51,6 +53,7 @@ class SynthesisEditViewModel @Inject constructor(
                         it.copy(
                             mode = SynthesisMode.VIEW,       // 列表点击进入即为浏览
                             draft = draft,
+                            nameEditable = false,
                             currentStepIndex = draft.currentStepIndex,
                             running = draft.steps[draft.currentStepIndex].timer.isRunning(),
                             loading = false,
@@ -189,6 +192,19 @@ class SynthesisEditViewModel @Inject constructor(
                 // 持久化 draft
                 val currentState = _uiState.value
                 val currentDraft = currentState.draft
+                // 如果材料名称重复，则拒绝保存（仅限新增材料，修改不影响）
+                if (currentState.nameEditable) {
+                    when {
+                        isMaterialExists(currentDraft.materialName) -> {
+                            toast("材料名称已经存在！")
+                            return@launch
+                        }
+                        currentDraft.materialName == "" -> {
+                            toast("材料名称不能为空！")
+                            return@launch
+                        }
+                    }
+                }
                 repo.upsert(currentDraft)
 
                 // 编辑后当前步骤索引
@@ -297,7 +313,7 @@ class SynthesisEditViewModel @Inject constructor(
                     targetIdx < currentIdx -> {
                         _uiState.update {
                             it.copy(
-                                openPrevConfirmDialog = true,
+                                dialogState = it.dialogState.copy(openPrevConfirmDialog = true),
                                 jumpTargetIndex = targetIdx
                             )
                         }
@@ -305,7 +321,7 @@ class SynthesisEditViewModel @Inject constructor(
                     targetIdx > currentIdx -> {
                         _uiState.update {
                             it.copy(
-                                openSubsConfirmDialog = true,
+                                dialogState = it.dialogState.copy(openSubsConfirmDialog = true),
                                 jumpTargetIndex = targetIdx
                             )
                         }
@@ -315,7 +331,9 @@ class SynthesisEditViewModel @Inject constructor(
                         val hasNext = uiState.value.currentStepIndex < _uiState.value.draft.steps.lastIndex
                         if (!hasNext && !uiState.value.draft.isFinished)
                             _uiState.update {
-                                it.copy(openCompleteConfirmDialog = true)
+                                it.copy(
+                                    dialogState = it.dialogState.copy(openCompleteConfirmDialog = true)
+                                )
                             }
                     }
                 }
@@ -326,24 +344,28 @@ class SynthesisEditViewModel @Inject constructor(
 
             SynthesisAction.DeleteDraft ->
                 _uiState.update {
-                    it.copy(openDeleteConfirmDialog = true)
+                    it.copy(
+                        dialogState = it.dialogState.copy(openDeleteConfirmDialog = true)
+                    )
                 }
 
             SynthesisAction.ManualCompletedAt ->
                 _uiState.update {
-                    it.copy(openManualCompleteAtDialog = true)
+                    it.copy(
+                        dialogState = it.dialogState.copy(openManualCompleteAtDialog = true)
+                    )
+                }
+            SynthesisAction.LoadSynthesis ->
+                _uiState.update {
+                    it.copy(
+                        dialogState = it.dialogState.copy(openLoadOtherDialog = true)
+                    )
                 }
         }
     }
 
-    fun closeConfirmDialog() {
-        _uiState.update { it.copy(
-            openSubsConfirmDialog = false,
-            openPrevConfirmDialog = false,
-            openDeleteConfirmDialog = false,
-            openCompleteConfirmDialog = false,
-            openManualCompleteAtDialog = false
-        ) }
+    fun closeDialog() {
+        _uiState.update { it.copy(dialogState = it.dialogState.closeAll()) }
     }
 
     fun completeLastStep() {
@@ -468,6 +490,27 @@ class SynthesisEditViewModel @Inject constructor(
         val name = state.draft.materialName
         viewModelScope.launch { repo.setCompletedAt(name, time) }
         _uiState.update { it.copy(draft = it.draft.copy(completedAt = time)) }
+    }
+
+    suspend fun isMaterialExists(materialName: String): Boolean {
+        val draftId = repo.findDraftIdByName(materialName)
+        return draftId != null
+    }
+
+    // 用 Flow 暴露“全量列表”给导入对话框
+    val allDrafts: StateFlow<List<SynthesisDraft>> =
+        repo.observeAllDrafts() // Flow<List<SynthesisDraft>>
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // 全量导入选中的草稿
+    fun loadDraftFrom(selected: SynthesisDraft) {
+        _uiState.update { state ->
+            val newDraft = selected.copy(
+                completedAt = null,
+                steps = selected.steps.map { it.copy(timer = it.timer.reset()) }
+            )
+            state.copy(draft = newDraft)
+        }
     }
 
 }

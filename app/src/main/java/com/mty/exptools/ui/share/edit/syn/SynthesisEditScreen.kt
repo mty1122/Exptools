@@ -18,17 +18,14 @@ import com.mty.exptools.ui.share.AlertDialogShared
 @Composable
 fun SynthesisEditScreen(
     onBack: () -> Unit,
-    onPickOther: () -> Unit,
     onSetAlarmForCurrent: (materialName: String, stepIndex: Int, step: SynthesisStep) -> Unit,
     viewModel: SynthesisEditViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val allDrafts by viewModel.allDrafts.collectAsStateWithLifecycle()
     val tick by viewModel.tick.collectAsStateWithLifecycle()
     val blur by animateDpAsState(
-        targetValue = if (uiState.openPrevConfirmDialog || uiState.openSubsConfirmDialog
-            || uiState.openDeleteConfirmDialog || uiState.openCompleteConfirmDialog
-            || uiState.openManualCompleteAtDialog)
-            12.dp else 0.dp,
+        targetValue = if (uiState.dialogState.isOpen()) 12.dp else 0.dp,
         animationSpec = tween(200),
         label = "edit-blur"
     )
@@ -40,8 +37,9 @@ fun SynthesisEditScreen(
                 mode = uiState.mode,
                 running = uiState.running,
                 isFinished = uiState.draft.isFinished,
+                loadEnable = uiState.nameEditable,
                 onBack = onBack,
-                onLoadOther = onPickOther,
+                onLoadOther = { viewModel.onAction(SynthesisAction.LoadSynthesis) },
                 onSave = { viewModel.onAction(SynthesisAction.Save) },
                 onEdit = { viewModel.onAction(SynthesisAction.Edit) },
                 onSetAlarm = {
@@ -62,67 +60,79 @@ fun SynthesisEditScreen(
                 .padding(inner),
             mode = uiState.mode,
             draft = uiState.draft,
+            nameEditable = uiState.nameEditable,
             tick = tick,
             currentStepIndex = uiState.currentStepIndex,
             completedAt = uiState.draft.completedAt,
-            onAction = viewModel::onAction // 单入口事件，沿用你前面的写法
+            onAction = viewModel::onAction // 单入口事件
         )
     }
 
     when {
-        uiState.openSubsConfirmDialog -> {
+        uiState.dialogState.openSubsConfirmDialog -> {
             AlertDialogShared(
-                onDismissRequest = { viewModel.closeConfirmDialog() },
+                onDismissRequest = { viewModel.closeDialog() },
                 onConfirmation = {
                     viewModel.goToSubsequentStep()
-                    viewModel.closeConfirmDialog()
+                    viewModel.closeDialog()
                 },
                 dialogTitle = "确认跳转至第${uiState.jumpTargetIndex?.plus(1)}步？",
                 dialogText = "此操作不可撤回！该步之前的所有步骤都会变为已完成状态。"
             )
         }
-        uiState.openPrevConfirmDialog -> {
+        uiState.dialogState.openPrevConfirmDialog -> {
             AlertDialogShared(
-                onDismissRequest = { viewModel.closeConfirmDialog() },
+                onDismissRequest = { viewModel.closeDialog() },
                 onConfirmation = {
                     viewModel.goToPreviousStep()
-                    viewModel.closeConfirmDialog()
+                    viewModel.closeDialog()
                 },
                 dialogTitle = "确认跳转至第${uiState.jumpTargetIndex?.plus(1)}步？",
                 dialogText = "此操作不可撤回！该步之后的所有步骤都会变为未完成状态。"
             )
         }
-        uiState.openCompleteConfirmDialog -> {
+        uiState.dialogState.openCompleteConfirmDialog -> {
             AlertDialogShared(
-                onDismissRequest = { viewModel.closeConfirmDialog() },
+                onDismissRequest = { viewModel.closeDialog() },
                 onConfirmation = {
                     viewModel.completeLastStep()
-                    viewModel.closeConfirmDialog()
+                    viewModel.closeDialog()
                 },
                 dialogTitle = "确认完成当前步骤？",
                 dialogText = "此操作不可撤回！完成当前步骤后，所有步骤均已完成。"
             )
         }
-        uiState.openDeleteConfirmDialog -> {
+        uiState.dialogState.openDeleteConfirmDialog -> {
             AlertDialogShared(
-                onDismissRequest = { viewModel.closeConfirmDialog() },
+                onDismissRequest = { viewModel.closeDialog() },
                 onConfirmation = {
                     viewModel.deleteCurrentDraft()
-                    viewModel.closeConfirmDialog()
+                    viewModel.closeDialog()
                 },
                 dialogTitle = "确认删除当前合成步骤？",
                 dialogText = "此操作不可撤回！"
             )
         }
-        uiState.openManualCompleteAtDialog -> {
+        uiState.dialogState.openManualCompleteAtDialog -> {
             ManualCompletedAtDialog(
                 visible = true,
                 initialCompletedAt = uiState.draft.completedAt,
                 onConfirm = {
                     viewModel.setCompletedAtWithUiState(it)
-                    viewModel.closeConfirmDialog()
+                    viewModel.closeDialog()
                 },
-                onDismiss = { viewModel.closeConfirmDialog() }
+                onDismiss = { viewModel.closeDialog() }
+            )
+        }
+        uiState.dialogState.openLoadOtherDialog -> {
+            LoadSynthesisSheet(
+                visible = true,
+                drafts = allDrafts,
+                onDismiss = { viewModel.closeDialog() },
+                onPick = { draft ->
+                    viewModel.loadDraftFrom(draft)
+                    viewModel.closeDialog()
+                }
             )
         }
     }

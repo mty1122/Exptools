@@ -48,7 +48,6 @@ fun BaseScreen() {
         ) {
             SynthesisEditScreen(
                 onBack = { topNavController.popBackStack() },
-                onPickOther = { /* 跳到“载入其他实验”选择页 */ },
                 onSetAlarmForCurrent = { material, idx, step ->
                     val minutes = (step.timer.remaining().coerceAtLeast(0L) + 59_999L) / 60_000L
                     val cal = Calendar.getInstance().apply { add(Calendar.MINUTE, minutes.toInt()) }

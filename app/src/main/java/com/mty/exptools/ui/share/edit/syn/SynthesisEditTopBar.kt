@@ -23,6 +23,7 @@ fun SynthesisEditTopBar(
     mode: SynthesisMode,
     running: Boolean,
     isFinished: Boolean,
+    loadEnable: Boolean,
     onBack: () -> Unit,
     onLoadOther: () -> Unit,
     onSave: () -> Unit,
@@ -41,7 +42,8 @@ fun SynthesisEditTopBar(
         },
         actions = {
             if (mode == SynthesisMode.EDIT) {
-                TextButton(onClick = onLoadOther) { Text("载入其他实验") }
+                if (loadEnable)
+                    TextButton(onClick = onLoadOther) { Text("导入已有材料") }
                 IconButton(onClick = onSave) { Icon(Icons.Default.Save, null) }
             } else {
                 IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null) }

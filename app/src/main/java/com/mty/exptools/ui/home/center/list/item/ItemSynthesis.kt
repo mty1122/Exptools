@@ -77,7 +77,7 @@ fun ItemSynthesis(
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = statusToString(uiState.status),
+                            text = statusToString(uiState.status, uiState.timeUnit),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -131,10 +131,10 @@ fun ItemSynthesis(
     }
 }
 
-private fun statusToString(status: ItemStatus) = when(status) {
-    ItemStatus.STATUS_PAUSE -> "（已暂停）距离结束（分钟）"
-    ItemStatus.STATUS_START -> "距离结束（分钟）"
-    ItemStatus.STATUS_COMPLETE -> "已完成（天）"
+private fun statusToString(status: ItemStatus, timeUnit: String) = when(status) {
+    ItemStatus.STATUS_PAUSE -> "（已暂停）距离结束（${timeUnit}）"
+    ItemStatus.STATUS_START -> "距离结束（${timeUnit}）"
+    ItemStatus.STATUS_COMPLETE -> "已完成（${timeUnit}）"
 }
 
 @Preview(showBackground = true)
@@ -147,7 +147,8 @@ fun ItemItemSynthesisPreview() {
             targetStep = "120℃ 14h 水热反应 | 1号釜 小烘箱",
             nextStep = "60℃ 干燥 12小时",
             progress = 0.6f,
-            rightTimes = 20,
+            rightTimes = "20",
+            timeUnit = "天",
             status = ItemStatus.STATUS_START
         )
         ItemSynthesis(uiState)

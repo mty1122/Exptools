@@ -7,6 +7,7 @@ import androidx.room.Upsert
 import com.mty.exptools.logic.model.syn.SynthesisDraftEntity
 import com.mty.exptools.logic.model.syn.SynthesisDraftWithSteps
 import com.mty.exptools.logic.model.syn.SynthesisStepEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SynthesisDao {
@@ -85,5 +86,10 @@ interface SynthesisDao {
 
     @Query("UPDATE synthesis_draft SET completed_at = :completedTime, updated_at = :updateTime WHERE id = :id")
     suspend fun setCompletedAt(id: Long, completedTime: Long?, updateTime: Long)
+
+
+    // 用于列表读取
+    @Query("SELECT * FROM synthesis_draft")
+    fun observeAllDraftWithSteps(): Flow<List<SynthesisDraftWithSteps>>
 
 }

@@ -23,6 +23,7 @@ fun SynthesisEditScreen(
     viewModel: SynthesisEditViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val tick by viewModel.tick.collectAsStateWithLifecycle()
     val blur by animateDpAsState(
         targetValue = if (uiState.openPrevConfirmDialog || uiState.openSubsConfirmDialog
             || uiState.openDeleteConfirmDialog || uiState.openCompleteConfirmDialog
@@ -61,6 +62,7 @@ fun SynthesisEditScreen(
                 .padding(inner),
             mode = uiState.mode,
             draft = uiState.draft,
+            tick = tick,
             currentStepIndex = uiState.currentStepIndex,
             completedAt = uiState.draft.completedAt,
             onAction = viewModel::onAction // 单入口事件，沿用你前面的写法

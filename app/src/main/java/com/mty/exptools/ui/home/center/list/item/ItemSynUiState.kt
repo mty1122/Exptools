@@ -7,6 +7,7 @@ data class ItemSynUiState(
     val nextStep: String = "",
     val completeInfo: String = "",
     val progress: Float = 0f,
-    val rightTimes: Int,
+    val rightTimes: String,
+    val timeUnit: String,
     val status: ItemStatus
 ): ItemUiState

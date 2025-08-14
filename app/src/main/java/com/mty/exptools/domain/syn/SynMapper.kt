@@ -37,8 +37,7 @@ fun SynthesisDraft.toEntity(): SynthesisDraftEntity =
         rawMaterials = rawMaterials,
         conditionSummary = conditionSummary,
         expDetails = expDetails,
-        completedAt = completedAt,
-        updatedAt = System.currentTimeMillis()
+        completedAt = completedAt
     )
 
 fun SynthesisStep.toEntity(orderIndex: Int): SynthesisStepEntity =

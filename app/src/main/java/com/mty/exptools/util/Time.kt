@@ -1,8 +1,12 @@
 package com.mty.exptools.util
 
 import android.icu.util.TimeUnit
+import java.util.Locale
 
-data class Time(val value: Float, val unit: TimeUnit)
+data class Time(val value: Float, val unit: TimeUnit) {
+    val stringValue: String
+        get() = String.format(Locale.PRC, "%.1f", value)
+}
 
 @JvmInline
 value class MillisTime(val millis: Long) {
@@ -32,6 +36,8 @@ value class MillisTime(val millis: Long) {
         return currentDateTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
     }
 }
+
+fun Long.toMillisTime(): MillisTime = MillisTime(this)
 
 fun TimeUnit.asString(): String = when(this) {
     TimeUnit.SECOND -> "秒"

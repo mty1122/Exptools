@@ -9,16 +9,17 @@ data class StepTimer(
     fun isRunning(): Boolean = startEpochMs != null
     fun isFinished(): Boolean = remaining() <= 0L
 
-    fun remaining(): Long {
-        val now: Long = System.currentTimeMillis()
+    fun remaining(now: Long = System.currentTimeMillis()): Long {
         val live = startEpochMs?.let { now - it } ?: 0L
         return (requiredMillis - accumulatedMillis - live).coerceAtLeast(0L)
     }
-    fun start() =
-        if (startEpochMs == null) copy(startEpochMs = System.currentTimeMillis()) else this
-    fun pause() =
+    fun progress(): Float =
+        ((requiredMillis - remaining()).toFloat() / requiredMillis).coerceIn(0f, 1f)
+
+    fun start(now: Long = System.currentTimeMillis()) =
+        if (startEpochMs == null) copy(startEpochMs = now) else this
+    fun pause(now: Long = System.currentTimeMillis()) =
         startEpochMs?.let {
-            val now = System.currentTimeMillis()
             copy(accumulatedMillis = accumulatedMillis + (now - it), startEpochMs = null)
         } ?: this
     fun complete(): StepTimer = copy(accumulatedMillis = requiredMillis, startEpochMs = null)

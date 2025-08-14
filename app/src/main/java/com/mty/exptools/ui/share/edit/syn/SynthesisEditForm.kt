@@ -34,7 +34,6 @@ import com.mty.exptools.domain.syn.SynthesisDraft
 import com.mty.exptools.domain.syn.SynthesisStep
 import com.mty.exptools.util.MillisTime
 import com.mty.exptools.util.asString
-import java.util.Locale
 
 @Composable
 fun SynthesisEditForm(
@@ -43,6 +42,7 @@ fun SynthesisEditForm(
     draft: SynthesisDraft,
     currentStepIndex: Int,
     completedAt: Long?,
+    tick: Int,
     onAction: (SynthesisAction) -> Unit
 ) {
     LazyColumn(
@@ -91,6 +91,7 @@ fun SynthesisEditForm(
                 step = step,
                 editable = mode == SynthesisMode.EDIT,
                 highlight = mode == SynthesisMode.VIEW && idx == currentStepIndex,
+                tick = tick,
                 onContentChange = { onAction(SynthesisAction.UpdateStepContent(step.orderIndex, it)) },
                 onDurationChange = { onAction(SynthesisAction.UpdateStepDuration(step.orderIndex, it, step.unit)) },
                 onUnitChange = { onAction(SynthesisAction.UpdateStepUnit(step.orderIndex, it)) },
@@ -163,6 +164,7 @@ private fun StepCard(
     editable: Boolean,
     highlight: Boolean,
     clickable: Boolean,
+    tick: Int,
     onClick: () -> Unit,
     onContentChange: (String) -> Unit,
     onDurationChange: (String) -> Unit,
@@ -209,6 +211,7 @@ private fun StepCard(
                     }
                 }
             } else {
+                tick //用于每过一段时间自动更新剩余时间
                 // 浏览模式：只读展示
                 val text = buildString {
                     append("时长：")
@@ -221,7 +224,7 @@ private fun StepCard(
                         else -> {
                             append(" | 剩余：")
                             val time = MillisTime(step.timer.remaining()).toTime()
-                            append(String.format(Locale.PRC, "%.1f", time.value))
+                            append(time.stringValue)
                             append(" ")
                             append(time.unit.asString())
                         }

@@ -16,15 +16,7 @@ data class SynthesisDraftEntity(
     @ColumnInfo(name = "condition_summary") val conditionSummary: String,
     @ColumnInfo(name = "exp_details") val expDetails: String,
 
-    // 可选：为了恢复时直接高亮当前步
-    //@ColumnInfo(name = "current_step_index") val currentStepIndex: Int = 0,
-
-    // 可选：UI 运行状态通常可根据当前步 timer 推断；如需强持久化，也可单独落
-    //@ColumnInfo(name = "running") val running: Boolean = false,
-
     @ColumnInfo(name = "completed_at") val completedAt: Long? = null,
-
-    @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at") val updatedAt: Long = System.currentTimeMillis()
 )
 

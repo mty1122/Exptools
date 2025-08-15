@@ -27,8 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mty.exptools.R
-import com.mty.exptools.enum.LightSource
-import com.mty.exptools.enum.Pollutant
+import com.mty.exptools.domain.photo.LightSource
+import com.mty.exptools.domain.photo.PhotoTargetMaterial
 import com.mty.exptools.ui.theme.ExptoolsTheme
 
 @Composable
@@ -89,8 +89,8 @@ fun ItemPhotocatalysis(
 
                     Text(
                         text = buildString {
-                            append(uiState.targetPollutant.pollutantName)
-                            append(" | ${uiState.targetPollutant.waveLength}nm")
+                            append(uiState.target.name)
+                            append(" | ${uiState.target.waveLength}nm")
                             append(" | ${uiState.lightSource.label} ${uiState.lightSource.wavelength}nm")
                             if (uiState.status != ItemStatus.STATUS_COMPLETE)
                                 append("\n距离结束 ${uiState.totalMinutes - uiState.elapsedMinutes} 分钟")
@@ -142,7 +142,7 @@ fun ItemPhotocatalysisPreview() {
         val uiState = ItemPhotoUiState(
             listItemId = 1,
             materialName = "钨酸铋-实验2-22",
-            targetPollutant = Pollutant.TC,
+            target = PhotoTargetMaterial.TC,
             lightSource = LightSource.XENON_L,
             elapsedMinutes = 85,
             totalMinutes = 90,

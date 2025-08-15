@@ -1,12 +1,12 @@
 package com.mty.exptools.ui.home.center.list.item
 
-import com.mty.exptools.enum.LightSource
-import com.mty.exptools.enum.Pollutant
+import com.mty.exptools.domain.photo.LightSource
+import com.mty.exptools.domain.photo.PhotoTargetMaterial
 
 data class ItemPhotoUiState(
     override val listItemId: Int,
     val materialName: String,
-    val targetPollutant: Pollutant,
+    val target: PhotoTargetMaterial,
     val lightSource: LightSource,
     val elapsedMinutes: Int = 1,
     val totalMinutes: Int = 1,

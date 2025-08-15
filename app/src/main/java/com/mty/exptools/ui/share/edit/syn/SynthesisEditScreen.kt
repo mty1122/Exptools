@@ -1,5 +1,6 @@
 package com.mty.exptools.ui.share.edit.syn
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,26 +10,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.mty.exptools.domain.syn.SynthesisStep
 import com.mty.exptools.ui.share.AlertDialogShared
 
 @Composable
 fun SynthesisEditScreen(
-    onBack: () -> Unit,
+    navController: NavController,
     onSetAlarmForCurrent: (materialName: String, stepIndex: Int, step: SynthesisStep) -> Unit,
     viewModel: SynthesisEditViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val allDrafts by viewModel.allDrafts.collectAsStateWithLifecycle()
     val tick by viewModel.tick.collectAsStateWithLifecycle()
+    var showBackConfirmDialog: Boolean by rememberSaveable { mutableStateOf(false) }
     val blur by animateDpAsState(
-        targetValue = if (uiState.dialogState.isOpen()) 12.dp else 0.dp,
+        targetValue = if (uiState.dialogState.isOpen() || showBackConfirmDialog) 12.dp else 0.dp,
         animationSpec = tween(200),
         label = "edit-blur"
     )
+
+    BackHandler(enabled = uiState.mode == SynthesisMode.EDIT) {
+        showBackConfirmDialog = true
+    }
 
     Scaffold(
         modifier = Modifier.blur(blur),
@@ -38,7 +48,12 @@ fun SynthesisEditScreen(
                 running = uiState.running,
                 isFinished = uiState.draft.isFinished,
                 loadEnable = uiState.nameEditable,
-                onBack = onBack,
+                onBack = {
+                    if (uiState.mode == SynthesisMode.EDIT)
+                        showBackConfirmDialog = true
+                    else
+                        navController.popBackStack()
+                },
                 onLoadOther = { viewModel.onAction(SynthesisAction.LoadSynthesis) },
                 onSave = { viewModel.onAction(SynthesisAction.Save) },
                 onEdit = { viewModel.onAction(SynthesisAction.Edit) },
@@ -136,4 +151,9 @@ fun SynthesisEditScreen(
             )
         }
     }
+    BackConfirmDialog(
+        visible = showBackConfirmDialog,
+        onDismiss = { showBackConfirmDialog = false },
+        onNavigateBack = { navController.popBackStack() }
+    )
 }

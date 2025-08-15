@@ -9,7 +9,7 @@ data class DialogState(
     val openDeleteConfirmDialog: Boolean = false,
     val openCompleteConfirmDialog: Boolean = false,
     val openManualCompleteAtDialog: Boolean = false,
-    val openLoadOtherDialog: Boolean = false,
+    val openLoadOtherDialog: Boolean = false
 ) {
     fun closeAll() = copy(
         openPrevConfirmDialog = false,

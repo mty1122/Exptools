@@ -7,6 +7,7 @@ import com.mty.exptools.repository.ListRepository
 import com.mty.exptools.ui.home.center.list.item.ItemStatus
 import com.mty.exptools.ui.home.center.list.item.ItemSynUiState
 import com.mty.exptools.ui.home.center.list.item.ItemUiState
+import com.mty.exptools.util.MillisTime
 import com.mty.exptools.util.asString
 import com.mty.exptools.util.toMillisTime
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,10 +61,18 @@ class ListViewModel @Inject constructor(
     // 任一触发（DB变化 / 定时 / 手动），都重算 UIState
     val itemUiStateList: StateFlow<List<ItemUiState>> =
         combine(synDraftFlow, refreshTrigger) { drafts, _ ->
-            drafts.mapIndexed { idx, draft ->
+            drafts.sortedBy { draft ->
+                if (draft.isFinished)
+                    2 * System.currentTimeMillis() -
+                            (draft.completedAt ?: System.currentTimeMillis())
+                else
+                    draft.steps[draft.currentStepIndex].timer.remaining()
+            }.mapIndexed { idx, draft ->
                 // 已经结束的，计算完成了多久
                 val time = if (draft.isFinished) {
-                    (System.currentTimeMillis() - draft.completedAt!!).toMillisTime().toTime()
+                    draft.completedAt?.let {
+                        (System.currentTimeMillis() - it).toMillisTime().toTime()
+                    } ?: MillisTime(0).toTime()
                     // 未结束的计算当前步骤剩余时间
                 } else {
                     draft.steps[draft.currentStepIndex].timer.remaining()

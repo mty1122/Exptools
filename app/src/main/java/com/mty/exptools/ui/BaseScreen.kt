@@ -47,7 +47,7 @@ fun BaseScreen() {
             }
         ) {
             SynthesisEditScreen(
-                onBack = { topNavController.popBackStack() },
+                navController = topNavController,
                 onSetAlarmForCurrent = { material, idx, step ->
                     val minutes = (step.timer.remaining().coerceAtLeast(0L) + 59_999L) / 60_000L
                     val cal = Calendar.getInstance().apply { add(Calendar.MINUTE, minutes.toInt()) }

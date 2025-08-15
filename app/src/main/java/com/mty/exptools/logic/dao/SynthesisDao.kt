@@ -81,6 +81,13 @@ interface SynthesisDao {
         start: Long?
     ): Int
 
+    @Query("""
+        UPDATE synthesis_step
+        SET accumulated_millis = required_millis, start_epoch_ms = NULL
+        WHERE draft_id = :draftId AND order_index IN (:orderIndexes)
+    """)
+    suspend fun completeStepsByIndex(draftId: Long, orderIndexes: List<Int>): Int
+
     @Query("DELETE FROM synthesis_draft WHERE material_name = :name")
     suspend fun deleteDraftByName(name: String): Int
 

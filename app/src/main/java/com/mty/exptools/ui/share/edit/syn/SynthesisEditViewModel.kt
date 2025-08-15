@@ -444,11 +444,9 @@ class SynthesisEditViewModel @Inject constructor(
             }
             // 持久化时间信息
             viewModelScope.launch {
-                repo.updateStepsTimerByIndex(
+                repo.completeStepsByIndex(
                     materialName = state.draft.materialName,
                     orderIndexes = (currentIndex until targetIndex).toList(),
-                    accumulatedMillis = steps[currentIndex].timer.accumulatedMillis,
-                    startEpochMs = steps[currentIndex].timer.startEpochMs
                 )
             }
 

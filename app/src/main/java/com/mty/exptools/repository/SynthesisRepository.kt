@@ -31,6 +31,11 @@ class SynthesisRepository @Inject constructor(){
         dao.updateStepsTimerByIndex(draftId, orderIndexes, accumulatedMillis, startEpochMs)
     }
 
+    suspend fun completeStepsByIndex(materialName: String, orderIndexes: List<Int>) {
+        val draftId = dao.findDraftIdByName(materialName)!!
+        dao.completeStepsByIndex(draftId, orderIndexes)
+    }
+
     suspend fun deleteDraftByName(name: String): Boolean = dao.deleteDraftByName(name) > 0
 
     suspend fun setCompletedAt(materialName: String, completedTime: Long?) {

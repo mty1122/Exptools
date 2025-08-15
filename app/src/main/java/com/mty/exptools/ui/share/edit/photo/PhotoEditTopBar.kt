@@ -1,4 +1,4 @@
-package com.mty.exptools.ui.share.edit.syn
+package com.mty.exptools.ui.share.edit.photo
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,11 +19,10 @@ import androidx.compose.runtime.Composable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SynthesisEditTopBar(
-    mode: SynthesisMode,
+fun PhotoEditTopBar(
+    mode: PhotocatalysisMode,
     running: Boolean,
     isFinished: Boolean,
-    loadEnable: Boolean,
     onBack: () -> Unit,
     onLoadOther: () -> Unit,
     onSave: () -> Unit,
@@ -34,16 +33,15 @@ fun SynthesisEditTopBar(
     onDelete: () -> Unit
 ) {
     TopAppBar(
-        title = { Text("合成步骤") },
+        title = { Text("光催化") },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
             }
         },
         actions = {
-            if (mode == SynthesisMode.EDIT) {
-                if (loadEnable)
-                    TextButton(onClick = onLoadOther) { Text("导入已有材料") }
+            if (mode == PhotocatalysisMode.EDIT) {
+                TextButton(onClick = onLoadOther) { Text("导入已有实验") }
                 IconButton(onClick = onSave) { Icon(Icons.Default.Save, null) }
             } else {
                 IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null) }

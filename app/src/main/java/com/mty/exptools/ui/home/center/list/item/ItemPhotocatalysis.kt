@@ -90,8 +90,9 @@ fun ItemPhotocatalysis(
                     Text(
                         text = buildString {
                             append(uiState.target.name)
-                            append(" | ${uiState.target.waveLength}nm")
-                            append(" | ${uiState.lightSource.label} ${uiState.lightSource.wavelength}nm")
+                            if (uiState.target.waveLength != "")
+                                append(" | ${uiState.target.waveLength}nm")
+                            append(" | ${uiState.lightSource}")
                             if (uiState.status != ItemStatus.STATUS_COMPLETE)
                                 append("\n距离结束 ${uiState.totalMinutes - uiState.elapsedMinutes} 分钟")
                         },

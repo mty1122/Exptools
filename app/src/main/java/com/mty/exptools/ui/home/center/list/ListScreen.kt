@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.mty.exptools.ui.PhotoEditRoute
 import com.mty.exptools.ui.SynthesisEditRoute
 import com.mty.exptools.ui.home.center.list.item.ItemOther
 import com.mty.exptools.ui.home.center.list.item.ItemOtherUiState
@@ -101,8 +102,15 @@ fun ListScreen(
             expanded = expanded,
             onExpandedChange = { expanded = it },
             onAdd = { itemType->
-                if (itemType == ItemType.SYNTHESIS) {
-                    topNavController.navigate(SynthesisEditRoute())
+                when (itemType) {
+                    ItemType.SYNTHESIS -> {
+                        topNavController.navigate(SynthesisEditRoute())
+                    }
+                    ItemType.PHOTOCATALYSIS -> {
+                        topNavController.navigate(PhotoEditRoute())
+                    }
+                    ItemType.TEST -> {}
+                    ItemType.OTHER -> {}
                 }
             },
             modifier = Modifier

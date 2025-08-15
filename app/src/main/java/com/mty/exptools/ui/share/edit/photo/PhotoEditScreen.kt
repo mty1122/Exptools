@@ -1,4 +1,4 @@
-package com.mty.exptools.ui.share.edit.syn
+package com.mty.exptools.ui.share.edit.photo
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
@@ -7,27 +7,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.mty.exptools.domain.StepTimer
+import com.mty.exptools.domain.photo.LightSource
+import com.mty.exptools.domain.photo.PhotoTargetMaterial
 import com.mty.exptools.ui.share.AlertDialogShared
+import com.mty.exptools.ui.share.edit.syn.BackConfirmDialog
+import com.mty.exptools.ui.share.edit.syn.LoadSynthesisSheet
+import com.mty.exptools.ui.share.edit.syn.ManualCompletedAtDialog
 
 @Composable
-fun SynthesisEditScreen(
+fun PhotoEditScreen(
     navController: NavController,
     onSetAlarmForCurrent: (message: String, timer: StepTimer) -> Unit,
-    viewModel: SynthesisEditViewModel = hiltViewModel()
+    viewModel: PhotoEditViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val allDrafts by viewModel.allDrafts.collectAsStateWithLifecycle()
+    val allSynDrafts by viewModel.allSynDrafts.collectAsStateWithLifecycle()
     val tick by viewModel.tick.collectAsStateWithLifecycle()
     var showBackConfirmDialog: Boolean by rememberSaveable { mutableStateOf(false) }
     val blur by animateDpAsState(
@@ -36,56 +41,56 @@ fun SynthesisEditScreen(
         label = "edit-blur"
     )
 
-    BackHandler(enabled = uiState.mode == SynthesisMode.EDIT) {
+    BackHandler(enabled = uiState.mode == PhotocatalysisMode.EDIT) {
         showBackConfirmDialog = true
     }
 
     Scaffold(
         modifier = Modifier.blur(blur),
         topBar = {
-            SynthesisEditTopBar(
+            PhotoEditTopBar(
                 mode = uiState.mode,
-                running = uiState.running,
-                isFinished = uiState.draft.isFinished,
-                loadEnable = uiState.nameEditable,
+                running = true, //uiState.running,
+                isFinished = false, //uiState.draft.isFinished,
                 onBack = {
-                    if (uiState.mode == SynthesisMode.EDIT)
+                    if (uiState.mode == PhotocatalysisMode.EDIT)
                         showBackConfirmDialog = true
                     else
                         navController.popBackStack()
                 },
-                onLoadOther = { viewModel.onAction(SynthesisAction.LoadSynthesis) },
-                onSave = { viewModel.onAction(SynthesisAction.Save) },
-                onEdit = { viewModel.onAction(SynthesisAction.Edit) },
+                onLoadOther = {}, //{ viewModel.onAction(PhotoEditAction.LoadSynthesis) },
+                onSave = { viewModel.onAction(PhotoEditAction.Save) },
+                onEdit = { viewModel.onAction(PhotoEditAction.Edit) },
                 onSetAlarm = {
+                    /*
                     val i = uiState.currentStepIndex
                     uiState.draft.steps.getOrNull(i)?.let { step ->
                         onSetAlarmForCurrent(
-                            "合成-${uiState.draft.materialName} 步骤${i+1} ${step.content}结束",
+                            "光催化-${uiState.draft.catalystName} 步骤${i+1} ${step.name}结束",
                             step.timer
                         )
                     }
+                     */
                 },
-                onToggleRun = { viewModel.onAction(SynthesisAction.ToggleRun) },
-                onDelete = { viewModel.onAction(SynthesisAction.DeleteDraft) },
-                onSetCompletedAt = { viewModel.onAction(SynthesisAction.ManualCompletedAt) }
+                onToggleRun = {}, //{ viewModel.onAction(PhotoEditAction.ToggleRun) },
+                onDelete = {}, //{ viewModel.onAction(PhotoEditAction.DeleteDraft) },
+                onSetCompletedAt = {}, //{ viewModel.onAction(PhotoEditAction.ManualCompletedAt) }
             )
         }
     ) { inner ->
-        SynthesisEditForm(
+        PhotoEditForm(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(inner),
-            mode = uiState.mode,
-            draft = uiState.draft,
-            nameEditable = uiState.nameEditable,
-            tick = tick,
-            currentStepIndex = uiState.currentStepIndex,
-            completedAt = uiState.draft.completedAt,
-            onAction = viewModel::onAction // 单入口事件
+            ui = uiState,
+            onAction = viewModel::onAction,
+            onPickExistingCatalyst = {},
+            existingTargets = listOf(PhotoTargetMaterial.TC),
+            existingLights = listOf(LightSource.XENON_L.value, LightSource.XENON_R.value)
         )
     }
 
+    /*
     when {
         uiState.dialogState.openSubsConfirmDialog -> {
             AlertDialogShared(
@@ -145,7 +150,7 @@ fun SynthesisEditScreen(
         uiState.dialogState.openLoadOtherDialog -> {
             LoadSynthesisSheet(
                 visible = true,
-                drafts = allDrafts,
+                drafts = allSynDrafts,
                 onDismiss = { viewModel.closeDialog() },
                 onPick = { draft ->
                     viewModel.loadDraftFrom(draft)
@@ -159,4 +164,5 @@ fun SynthesisEditScreen(
         onDismiss = { showBackConfirmDialog = false },
         onNavigateBack = { navController.popBackStack() }
     )
+     */
 }

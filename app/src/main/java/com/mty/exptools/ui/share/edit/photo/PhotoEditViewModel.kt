@@ -74,7 +74,8 @@ class PhotoEditViewModel @Inject constructor(
             PhotoEditAction.PickExistingCatalyst -> {
                 _uiState.update {
                     it.copy(
-                        photoDialogState = it.photoDialogState.copy(openLoadMaterialDialog = true)
+                        photoDialogState = it.photoDialogState.copy(openLoadMaterialSheet = true),
+                        backgroundBlur = true
                     )
                 }
             }
@@ -97,6 +98,9 @@ class PhotoEditViewModel @Inject constructor(
 
             is PhotoEditAction.UpdateStdCurveK ->
                 _uiState.update { it.copy(draft = it.draft.copy(target = it.draft.target.copy(stdCurveK = a.text))) }
+
+            is PhotoEditAction.UpdateStdCurveB ->
+                _uiState.update { it.copy(draft = it.draft.copy(target = it.draft.target.copy(stdCurveB = a.text))) }
 
             // ---------- 光源 ----------
             is PhotoEditAction.UpdateLightSource ->
@@ -199,7 +203,16 @@ class PhotoEditViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun closeDialog() {
-        _uiState.update { it.copy(photoDialogState = it.photoDialogState.closeAll()) }
+        _uiState.update {
+            it.copy(
+                photoDialogState = it.photoDialogState.closeAll(),
+                backgroundBlur = false
+            )
+        }
+    }
+
+    fun setBackgroundBlur(blur: Boolean) {
+        _uiState.update { it.copy(backgroundBlur = blur) }
     }
 
 }

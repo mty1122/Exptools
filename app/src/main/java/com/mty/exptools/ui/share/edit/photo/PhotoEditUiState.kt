@@ -4,26 +4,23 @@ import com.mty.exptools.domain.photo.PhotocatalysisDraft
 
 enum class PhotocatalysisMode { EDIT, VIEW }
 data class PhotoDialogState(
-    val openLoadMaterialDialog: Boolean = false,
+    val openLoadMaterialSheet: Boolean = false,
     val openPrevConfirmDialog: Boolean = false,
     val openSubsConfirmDialog: Boolean = false,
     val openDeleteConfirmDialog: Boolean = false,
     val openCompleteConfirmDialog: Boolean = false,
     val openManualCompleteAtDialog: Boolean = false,
-    val openLoadOtherDialog: Boolean = false
+    val openLoadOtherSheet: Boolean = false
 ) {
     fun closeAll() = copy(
-        openLoadMaterialDialog = false,
+        openLoadMaterialSheet = false,
         openPrevConfirmDialog = false,
         openSubsConfirmDialog = false,
         openDeleteConfirmDialog = false,
         openCompleteConfirmDialog = false,
         openManualCompleteAtDialog = false,
-        openLoadOtherDialog = false
+        openLoadOtherSheet = false
     )
-    fun isOpen() = openPrevConfirmDialog || openSubsConfirmDialog || openDeleteConfirmDialog
-            || openCompleteConfirmDialog || openManualCompleteAtDialog || openLoadOtherDialog
-            || openLoadMaterialDialog
 }
 
 data class PhotoEditUiState(
@@ -32,5 +29,6 @@ data class PhotoEditUiState(
     val currentStepIndex: Int = 0,     // 浏览态当前步高亮
     val loading: Boolean = false,
     val photoDialogState: PhotoDialogState = PhotoDialogState(),
+    val backgroundBlur: Boolean = false,
     val error: String? = null
 )

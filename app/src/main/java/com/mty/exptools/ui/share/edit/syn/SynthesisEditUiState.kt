@@ -1,6 +1,7 @@
 package com.mty.exptools.ui.share.edit.syn
 
 import com.mty.exptools.domain.syn.SynthesisDraft
+import kotlin.Boolean
 
 enum class SynthesisMode { EDIT, VIEW }
 data class SynthesisDialogState(
@@ -9,7 +10,7 @@ data class SynthesisDialogState(
     val openDeleteConfirmDialog: Boolean = false,
     val openCompleteConfirmDialog: Boolean = false,
     val openManualCompleteAtDialog: Boolean = false,
-    val openLoadOtherDialog: Boolean = false
+    val openLoadOtherSheet: Boolean = false
 ) {
     fun closeAll() = copy(
         openPrevConfirmDialog = false,
@@ -17,11 +18,8 @@ data class SynthesisDialogState(
         openDeleteConfirmDialog = false,
         openCompleteConfirmDialog = false,
         openManualCompleteAtDialog = false,
-        openLoadOtherDialog = false
+        openLoadOtherSheet = false
     )
-
-    fun isOpen() = openPrevConfirmDialog || openSubsConfirmDialog || openDeleteConfirmDialog
-            || openCompleteConfirmDialog || openManualCompleteAtDialog || openLoadOtherDialog
 }
 
 data class SynthesisEditUiState(
@@ -32,6 +30,7 @@ data class SynthesisEditUiState(
     val running: Boolean = false,
     val loading: Boolean = false,
     val dialogState: SynthesisDialogState = SynthesisDialogState(),
+    val backgroundBlur: Boolean = false,
     val jumpTargetIndex: Int? = null,
     val error: String? = null
 )

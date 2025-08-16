@@ -19,6 +19,7 @@ fun LoadSynthesisSheet(
     visible: Boolean,
     drafts: List<SynthesisDraft>,        // 来自 VM 的列表（Flow 收集后传进来）
     onDismiss: () -> Unit,
+    setBackgroundBlur: (Boolean) -> Unit = {},    // 控制背景模糊
     onPick: (SynthesisDraft) -> Unit     // 选定后回调
 ) {
     if (!visible) return
@@ -36,7 +37,17 @@ fun LoadSynthesisSheet(
         }
     }
 
+    // 监听 sheet 状态，调整背景模糊
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    LaunchedEffect(sheetState.targetValue) {
+        when (sheetState.targetValue) {
+            SheetValue.Hidden -> setBackgroundBlur(false)
+            else -> setBackgroundBlur(true)
+        }
+    }
+
     ModalBottomSheet(
+        sheetState = sheetState,
         onDismissRequest = onDismiss
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {

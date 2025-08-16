@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 import com.mty.exptools.domain.StepTimer
 import com.mty.exptools.domain.photo.LightSource
 import com.mty.exptools.domain.photo.PhotoTargetMaterial
+import com.mty.exptools.ui.SynthesisEditRoute
 import com.mty.exptools.ui.share.edit.syn.BackConfirmDialog
 import com.mty.exptools.ui.share.edit.syn.LoadSynthesisSheet
 
@@ -34,7 +35,7 @@ fun PhotoEditScreen(
     val tick by viewModel.tick.collectAsStateWithLifecycle()
     var showBackConfirmDialog: Boolean by rememberSaveable { mutableStateOf(false) }
     val blur by animateDpAsState(
-        targetValue = if (uiState.photoDialogState.isOpen() || showBackConfirmDialog) 12.dp else 0.dp,
+        targetValue = if (uiState.backgroundBlur || showBackConfirmDialog) 12.dp else 0.dp,
         animationSpec = tween(200),
         label = "edit-blur"
     )
@@ -80,6 +81,9 @@ fun PhotoEditScreen(
                 .padding(inner),
             ui = uiState,
             tick = tick,
+            onClickCatalystName = { catalystName ->
+                navController.navigate(SynthesisEditRoute(catalystName))
+            },
             onAction = viewModel::onAction,
             existingTargets = listOf(PhotoTargetMaterial.TC),
             existingLights = listOf(LightSource.XENON_L.value, LightSource.XENON_R.value)
@@ -156,11 +160,12 @@ fun PhotoEditScreen(
     }
 
  */
-        uiState.photoDialogState.openLoadMaterialDialog -> {
+        uiState.photoDialogState.openLoadMaterialSheet -> {
             LoadSynthesisSheet(
                 visible = true,
                 drafts = allSynDrafts,
                 onDismiss = { viewModel.closeDialog() },
+                setBackgroundBlur = viewModel::setBackgroundBlur,
                 onPick = { draft ->
                     viewModel.onAction(PhotoEditAction.UpdateCatalystName(draft.materialName))
                     viewModel.closeDialog()

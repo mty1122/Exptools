@@ -314,7 +314,8 @@ class SynthesisEditViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 dialogState = it.dialogState.copy(openPrevConfirmDialog = true),
-                                jumpTargetIndex = targetIdx
+                                jumpTargetIndex = targetIdx,
+                                backgroundBlur = true
                             )
                         }
                     }
@@ -322,7 +323,8 @@ class SynthesisEditViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 dialogState = it.dialogState.copy(openSubsConfirmDialog = true),
-                                jumpTargetIndex = targetIdx
+                                jumpTargetIndex = targetIdx,
+                                backgroundBlur = true
                             )
                         }
                     }
@@ -332,7 +334,8 @@ class SynthesisEditViewModel @Inject constructor(
                         if (!hasNext && !uiState.value.draft.isFinished)
                             _uiState.update {
                                 it.copy(
-                                    dialogState = it.dialogState.copy(openCompleteConfirmDialog = true)
+                                    dialogState = it.dialogState.copy(openCompleteConfirmDialog = true),
+                                    backgroundBlur = true
                                 )
                             }
                     }
@@ -345,27 +348,39 @@ class SynthesisEditViewModel @Inject constructor(
             SynthesisAction.DeleteDraft ->
                 _uiState.update {
                     it.copy(
-                        dialogState = it.dialogState.copy(openDeleteConfirmDialog = true)
+                        dialogState = it.dialogState.copy(openDeleteConfirmDialog = true),
+                        backgroundBlur = true
                     )
                 }
 
             SynthesisAction.ManualCompletedAt ->
                 _uiState.update {
                     it.copy(
-                        dialogState = it.dialogState.copy(openManualCompleteAtDialog = true)
+                        dialogState = it.dialogState.copy(openManualCompleteAtDialog = true),
+                        backgroundBlur = true
                     )
                 }
             SynthesisAction.LoadSynthesis ->
                 _uiState.update {
                     it.copy(
-                        dialogState = it.dialogState.copy(openLoadOtherDialog = true)
+                        dialogState = it.dialogState.copy(openLoadOtherSheet = true),
+                        backgroundBlur = true
                     )
                 }
         }
     }
 
     fun closeDialog() {
-        _uiState.update { it.copy(dialogState = it.dialogState.closeAll()) }
+        _uiState.update {
+            it.copy(
+                dialogState = it.dialogState.closeAll(),
+                backgroundBlur = false
+            )
+        }
+    }
+
+    fun setBackgroundBlur(blur: Boolean) {
+        _uiState.update { it.copy(backgroundBlur = blur) }
     }
 
     fun completeLastStep() {
@@ -405,7 +420,7 @@ class SynthesisEditViewModel @Inject constructor(
             if (currentIndex > steps.lastIndex) return@update state
 
             // 复位沿路所有步骤
-            for (idx in targetIndex until currentIndex + 1) {
+            for (idx in targetIndex .. currentIndex) {
                 steps[idx] = steps[idx].copy(timer = steps[idx].timer.reset())
             }
 
@@ -413,7 +428,7 @@ class SynthesisEditViewModel @Inject constructor(
             viewModelScope.launch {
                 repo.updateStepsTimerByIndex(
                     materialName = state.draft.materialName,
-                    orderIndexes = (targetIndex until currentIndex + 1).toList(),
+                    orderIndexes = (targetIndex .. currentIndex).toList(),
                     accumulatedMillis = steps[targetIndex].timer.accumulatedMillis,
                     startEpochMs = steps[targetIndex].timer.startEpochMs
                 )

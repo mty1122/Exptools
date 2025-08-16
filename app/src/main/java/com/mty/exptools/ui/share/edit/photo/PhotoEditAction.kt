@@ -15,6 +15,7 @@ sealed interface PhotoEditAction {
     data class UpdateInitialConcValue(val text: String) : PhotoEditAction
     data class UpdateInitialConcUnit(val unit: ConcUnit) : PhotoEditAction
     data class UpdateStdCurveK(val text: String) : PhotoEditAction
+    data class UpdateStdCurveB(val text: String) : PhotoEditAction
 
     // 光源 & 实验细节
     data class UpdateLightSource(val v: LightSource) : PhotoEditAction

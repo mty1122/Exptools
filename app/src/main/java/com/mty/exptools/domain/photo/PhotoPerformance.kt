@@ -1,13 +1,14 @@
 package com.mty.exptools.domain.photo
 
 /** 把文本浓度（A 或 mg/L）统一换算为 mg/L；失败返回 null */
-fun toMgL(valueText: String, unit: ConcUnit, kText: String): Double? =
+fun toMgL(valueText: String, unit: ConcUnit, kText: String, bText: String): Double? =
     when (unit) {
         ConcUnit.MG_L -> valueText.toDoubleOrNull()
         ConcUnit.ABSORBANCE_A -> {
             val a = valueText.toDoubleOrNull() ?: return null
             val k = kText.toDoubleOrNull() ?: return null
-            if (k <= 0.0) null else a / k
+            val b = bText.toDoubleOrNull() ?: return null
+            if (k <= 0.0) null else (a - b) / k
         }
     }
 

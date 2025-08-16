@@ -31,7 +31,7 @@ fun SynthesisEditScreen(
     val tick by viewModel.tick.collectAsStateWithLifecycle()
     var showBackConfirmDialog: Boolean by rememberSaveable { mutableStateOf(false) }
     val blur by animateDpAsState(
-        targetValue = if (uiState.dialogState.isOpen() || showBackConfirmDialog) 12.dp else 0.dp,
+        targetValue = if (uiState.backgroundBlur || showBackConfirmDialog) 12.dp else 0.dp,
         animationSpec = tween(200),
         label = "edit-blur"
     )
@@ -142,10 +142,11 @@ fun SynthesisEditScreen(
                 onDismiss = { viewModel.closeDialog() }
             )
         }
-        uiState.dialogState.openLoadOtherDialog -> {
+        uiState.dialogState.openLoadOtherSheet -> {
             LoadSynthesisSheet(
                 visible = true,
                 drafts = allDrafts,
+                setBackgroundBlur = viewModel::setBackgroundBlur,
                 onDismiss = { viewModel.closeDialog() },
                 onPick = { draft ->
                     viewModel.loadDraftFrom(draft)

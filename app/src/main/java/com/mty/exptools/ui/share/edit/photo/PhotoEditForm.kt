@@ -62,6 +62,7 @@ fun PhotoEditForm(
     modifier: Modifier,
     ui: PhotoEditUiState,
     tick: Int,
+    onClickCatalystName: (String) -> Unit,
     onAction: (PhotoEditAction) -> Unit,
     existingTargets: List<PhotoTargetMaterial> = emptyList(),  // 已有反应物/产物名称
     existingLights: List<String> = emptyList()    // 已有光源文案（如“氙灯 420nm”）
@@ -99,7 +100,20 @@ fun PhotoEditForm(
                         )
                     }
                 } else {
-                    ReadonlyBox(draft.catalystName.ifBlank { "—" })
+                    val text = draft.catalystName
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.clickable(
+                            enabled = text.isNotBlank(),
+                            onClick = { onClickCatalystName(text) }
+                        )
+                    ) {
+                        Text(
+                            text = text.ifBlank { "—" },
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
                 }
             }
         }
@@ -360,17 +374,47 @@ private fun TargetCard(
                     }
                 } else {
                     val unit = if (target.initialConcUnit == ConcUnit.ABSORBANCE_A) "A" else "mg/L"
+                    Spacer(Modifier.height(6.dp))
                     ReadonlyBox((target.initialConcValue.ifBlank { "—" }) + " $unit")
                 }
             }
 
             // 第三行：标准曲线 y = kx（k 可空）
-            FieldBlock(
-                title = "标准曲线（y = kx，填写 k；可空）",
-                value = target.stdCurveK,
-                editable = mode == PhotocatalysisMode.EDIT,
-                onValueChange = { onAction(PhotoEditAction.UpdateStdCurveK(it)) }
-            )
+            Column {
+                Text("标准曲线（A = kc + b)", style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary)
+                if (mode == PhotocatalysisMode.EDIT) {
+                    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = target.stdCurveK,
+                            onValueChange = { onAction(PhotoEditAction.UpdateStdCurveK(it)) },
+                            label = { Text("填写 k；可空") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = target.stdCurveB,
+                            onValueChange = { onAction(PhotoEditAction.UpdateStdCurveB(it)) },
+                            label = { Text("填写 b；可空") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                } else {
+                    val text = buildString {
+                        if (target.stdCurveK.isBlank()) return@buildString
+                        append("A = ")
+                        append(target.stdCurveK)
+                        append("c")
+                        if (target.stdCurveB.isNotBlank()) {
+                            append(" + ")
+                            append(target.stdCurveB)
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    ReadonlyBox(text.ifBlank { "—" })
+                }
+            }
         }
     }
 }
@@ -484,12 +528,14 @@ private fun StepCardPhoto(
                     val c0 = toMgL(
                         valueText = target.initialConcValue,
                         unit = target.initialConcUnit,
-                        kText = target.stdCurveK
+                        kText = target.stdCurveK,
+                        bText = target.stdCurveB
                     )
                     val ci = toMgL(
                         valueText = step.concValueText,
                         unit = step.concUnit,
-                        kText = target.stdCurveK
+                        kText = target.stdCurveK,
+                        bText = target.stdCurveB
                     )
                     val perf = calcPerformance(c0, ci)
                     tick // 用于每过一段时间自动更新剩余时间

@@ -3,7 +3,7 @@ package com.mty.exptools.ui.share.edit.syn
 import com.mty.exptools.domain.syn.SynthesisDraft
 
 enum class SynthesisMode { EDIT, VIEW }
-data class DialogState(
+data class SynthesisDialogState(
     val openPrevConfirmDialog: Boolean = false,
     val openSubsConfirmDialog: Boolean = false,
     val openDeleteConfirmDialog: Boolean = false,
@@ -19,6 +19,7 @@ data class DialogState(
         openManualCompleteAtDialog = false,
         openLoadOtherDialog = false
     )
+
     fun isOpen() = openPrevConfirmDialog || openSubsConfirmDialog || openDeleteConfirmDialog
             || openCompleteConfirmDialog || openManualCompleteAtDialog || openLoadOtherDialog
 }
@@ -30,7 +31,7 @@ data class SynthesisEditUiState(
     val currentStepIndex: Int = 0,
     val running: Boolean = false,
     val loading: Boolean = false,
-    val dialogState: DialogState = DialogState(),
+    val dialogState: SynthesisDialogState = SynthesisDialogState(),
     val jumpTargetIndex: Int? = null,
     val error: String? = null
 )

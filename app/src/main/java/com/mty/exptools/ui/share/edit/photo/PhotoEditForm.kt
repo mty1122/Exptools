@@ -1,5 +1,6 @@
 package com.mty.exptools.ui.share.edit.photo
 
+import android.icu.util.TimeUnit
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,15 +54,17 @@ import com.mty.exptools.domain.photo.PhotocatalysisStep
 import com.mty.exptools.domain.photo.PhotocatalysisTarget
 import com.mty.exptools.domain.photo.calcPerformance
 import com.mty.exptools.domain.photo.toMgL
+import com.mty.exptools.util.MillisTime
+import com.mty.exptools.util.asString
 
 @Composable
 fun PhotoEditForm(
     modifier: Modifier,
     ui: PhotoEditUiState,
+    tick: Int,
     onAction: (PhotoEditAction) -> Unit,
-    onPickExistingCatalyst: () -> Unit, // 点击“选择已有材料”的入口（弹出你现有的选择器）
-    existingTargets: List<PhotoTargetMaterial> = emptyList(),  // 新增：已有反应物/产物名称
-    existingLights: List<String> = emptyList()    // 新增：已有光源文案（如“氙灯 420nm”）
+    existingTargets: List<PhotoTargetMaterial> = emptyList(),  // 已有反应物/产物名称
+    existingLights: List<String> = emptyList()    // 已有光源文案（如“氙灯 420nm”）
 ) {
     val draft = ui.draft
     val mode = ui.mode
@@ -91,10 +94,7 @@ fun PhotoEditForm(
                         Spacer(Modifier.width(8.dp))
                         AssistChip(
                             modifier = Modifier.height(56.dp),
-                            onClick = {
-                                onAction(PhotoEditAction.PickExistingCatalyst)
-                                onPickExistingCatalyst()
-                            },
+                            onClick = { onAction(PhotoEditAction.PickExistingCatalyst) },
                             label = { Text("选择已有材料", color = MaterialTheme.colorScheme.primary) }
                         )
                     }
@@ -142,6 +142,7 @@ fun PhotoEditForm(
                 index = idx,
                 mode = mode,
                 step = step,
+                tick = tick,
                 target = draft.target,
                 highlight = mode == PhotocatalysisMode.VIEW && idx == ui.currentStepIndex,
                 onAction = onAction,
@@ -154,6 +155,18 @@ fun PhotoEditForm(
                 OutlinedButton(onClick = { onAction(PhotoEditAction.AddStep) }) {
                     Text("＋ 添加步骤")
                 }
+            }
+        }
+
+        if (draft.completedAt != null && mode == PhotocatalysisMode.VIEW) {
+            item {
+                FieldBlock(
+                    title = if (draft.completedAt > System.currentTimeMillis())
+                        "预计完成时间：" else "完成于：",
+                    value = MillisTime(draft.completedAt).toDateTime(),
+                    editable = false,
+                    onValueChange = {}
+                )
             }
         }
     }
@@ -368,6 +381,7 @@ private fun StepCardPhoto(
     index: Int,
     mode: PhotocatalysisMode,
     step: PhotocatalysisStep,
+    tick: Int,
     target: PhotocatalysisTarget,
     highlight: Boolean,
     onAction: (PhotoEditAction) -> Unit,
@@ -412,7 +426,7 @@ private fun StepCardPhoto(
                             modifier = Modifier.weight(1f)
                         )
                         OutlinedTextField(
-                            value = step.intervalMinuteText,
+                            value = step.duration().takeIf { it > 0 }?.toString() ?: "",
                             onValueChange = {
                                 onAction(
                                     PhotoEditAction.UpdateStepIntervalMinute(
@@ -478,7 +492,24 @@ private fun StepCardPhoto(
                         kText = target.stdCurveK
                     )
                     val perf = calcPerformance(c0, ci)
-                    val line1 = "间隔：${step.intervalMinuteText.ifBlank { "—" }} 分钟"
+                    tick // 用于每过一段时间自动更新剩余时间
+                    val line1 = buildString {
+                        append("时长：")
+                        append(step.duration())
+                        append(" ")
+                        append(TimeUnit.MINUTE.asString())
+                        when {
+                            step.timer.isFinished() -> append(" | 已完成")
+                            step.timer.neverStart() -> append(" | 未开始")
+                            else -> {
+                                append(" | 剩余：")
+                                val time = MillisTime(step.timer.remaining()).toTime()
+                                append(time.stringValue)
+                                append(" ")
+                                append(time.unit.asString())
+                            }
+                        }
+                    }
                     val line2 = when {
                         perf != null -> "性能：${"%.1f".format((perf * 100).coerceIn(0.0, 100.0))} %"
                         else -> {

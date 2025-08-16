@@ -212,7 +212,7 @@ private fun StepCard(
                     }
                 }
             } else {
-                tick //用于每过一段时间自动更新剩余时间
+                tick // 用于每过一段时间自动更新剩余时间
                 // 浏览模式：只读展示
                 val text = buildString {
                     append("时长：")

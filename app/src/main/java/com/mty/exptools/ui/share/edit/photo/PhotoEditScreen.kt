@@ -20,10 +20,8 @@ import androidx.navigation.NavController
 import com.mty.exptools.domain.StepTimer
 import com.mty.exptools.domain.photo.LightSource
 import com.mty.exptools.domain.photo.PhotoTargetMaterial
-import com.mty.exptools.ui.share.AlertDialogShared
 import com.mty.exptools.ui.share.edit.syn.BackConfirmDialog
 import com.mty.exptools.ui.share.edit.syn.LoadSynthesisSheet
-import com.mty.exptools.ui.share.edit.syn.ManualCompletedAtDialog
 
 @Composable
 fun PhotoEditScreen(
@@ -36,7 +34,7 @@ fun PhotoEditScreen(
     val tick by viewModel.tick.collectAsStateWithLifecycle()
     var showBackConfirmDialog: Boolean by rememberSaveable { mutableStateOf(false) }
     val blur by animateDpAsState(
-        targetValue = if (uiState.dialogState.isOpen() || showBackConfirmDialog) 12.dp else 0.dp,
+        targetValue = if (uiState.photoDialogState.isOpen() || showBackConfirmDialog) 12.dp else 0.dp,
         animationSpec = tween(200),
         label = "edit-blur"
     )
@@ -62,7 +60,6 @@ fun PhotoEditScreen(
                 onSave = { viewModel.onAction(PhotoEditAction.Save) },
                 onEdit = { viewModel.onAction(PhotoEditAction.Edit) },
                 onSetAlarm = {
-                    /*
                     val i = uiState.currentStepIndex
                     uiState.draft.steps.getOrNull(i)?.let { step ->
                         onSetAlarmForCurrent(
@@ -70,7 +67,6 @@ fun PhotoEditScreen(
                             step.timer
                         )
                     }
-                     */
                 },
                 onToggleRun = {}, //{ viewModel.onAction(PhotoEditAction.ToggleRun) },
                 onDelete = {}, //{ viewModel.onAction(PhotoEditAction.DeleteDraft) },
@@ -83,86 +79,99 @@ fun PhotoEditScreen(
                 .fillMaxSize()
                 .padding(inner),
             ui = uiState,
+            tick = tick,
             onAction = viewModel::onAction,
-            onPickExistingCatalyst = {},
             existingTargets = listOf(PhotoTargetMaterial.TC),
             existingLights = listOf(LightSource.XENON_L.value, LightSource.XENON_R.value)
         )
     }
 
-    /*
     when {
-        uiState.dialogState.openSubsConfirmDialog -> {
-            AlertDialogShared(
-                onDismissRequest = { viewModel.closeDialog() },
-                onConfirmation = {
-                    viewModel.goToSubsequentStep()
-                    viewModel.closeDialog()
-                },
-                dialogTitle = "确认跳转至第${uiState.jumpTargetIndex?.plus(1)}步？",
-                dialogText = "此操作不可撤回！该步之前的所有步骤都会变为已完成状态。"
-            )
-        }
-        uiState.dialogState.openPrevConfirmDialog -> {
-            AlertDialogShared(
-                onDismissRequest = { viewModel.closeDialog() },
-                onConfirmation = {
-                    viewModel.goToPreviousStep()
-                    viewModel.closeDialog()
-                },
-                dialogTitle = "确认跳转至第${uiState.jumpTargetIndex?.plus(1)}步？",
-                dialogText = "此操作不可撤回！该步之后的所有步骤都会变为未完成状态。"
-            )
-        }
-        uiState.dialogState.openCompleteConfirmDialog -> {
-            AlertDialogShared(
-                onDismissRequest = { viewModel.closeDialog() },
-                onConfirmation = {
-                    viewModel.completeLastStep()
-                    viewModel.closeDialog()
-                },
-                dialogTitle = "确认完成当前步骤？",
-                dialogText = "此操作不可撤回！完成当前步骤后，所有步骤均已完成。"
-            )
-        }
-        uiState.dialogState.openDeleteConfirmDialog -> {
-            AlertDialogShared(
-                onDismissRequest = { viewModel.closeDialog() },
-                onConfirmation = {
-                    viewModel.deleteCurrentDraft()
-                    viewModel.closeDialog()
-                },
-                dialogTitle = "确认删除当前合成步骤？",
-                dialogText = "此操作不可撤回！"
-            )
-        }
-        uiState.dialogState.openManualCompleteAtDialog -> {
-            ManualCompletedAtDialog(
-                visible = true,
-                initialCompletedAt = uiState.draft.completedAt,
-                onConfirm = {
-                    viewModel.setCompletedAtWithUiState(it)
-                    viewModel.closeDialog()
-                },
-                onDismiss = { viewModel.closeDialog() }
-            )
-        }
-        uiState.dialogState.openLoadOtherDialog -> {
+        /*
+    uiState.dialogState.openSubsConfirmDialog -> {
+        AlertDialogShared(
+            onDismissRequest = { viewModel.closeDialog() },
+            onConfirmation = {
+                viewModel.goToSubsequentStep()
+                viewModel.closeDialog()
+            },
+            dialogTitle = "确认跳转至第${uiState.jumpTargetIndex?.plus(1)}步？",
+            dialogText = "此操作不可撤回！该步之前的所有步骤都会变为已完成状态。"
+        )
+    }
+    uiState.dialogState.openPrevConfirmDialog -> {
+        AlertDialogShared(
+            onDismissRequest = { viewModel.closeDialog() },
+            onConfirmation = {
+                viewModel.goToPreviousStep()
+                viewModel.closeDialog()
+            },
+            dialogTitle = "确认跳转至第${uiState.jumpTargetIndex?.plus(1)}步？",
+            dialogText = "此操作不可撤回！该步之后的所有步骤都会变为未完成状态。"
+        )
+    }
+    uiState.dialogState.openCompleteConfirmDialog -> {
+        AlertDialogShared(
+            onDismissRequest = { viewModel.closeDialog() },
+            onConfirmation = {
+                viewModel.completeLastStep()
+                viewModel.closeDialog()
+            },
+            dialogTitle = "确认完成当前步骤？",
+            dialogText = "此操作不可撤回！完成当前步骤后，所有步骤均已完成。"
+        )
+    }
+    uiState.dialogState.openDeleteConfirmDialog -> {
+        AlertDialogShared(
+            onDismissRequest = { viewModel.closeDialog() },
+            onConfirmation = {
+                viewModel.deleteCurrentDraft()
+                viewModel.closeDialog()
+            },
+            dialogTitle = "确认删除当前合成步骤？",
+            dialogText = "此操作不可撤回！"
+        )
+    }
+    uiState.dialogState.openManualCompleteAtDialog -> {
+        ManualCompletedAtDialog(
+            visible = true,
+            initialCompletedAt = uiState.draft.completedAt,
+            onConfirm = {
+                viewModel.setCompletedAtWithUiState(it)
+                viewModel.closeDialog()
+            },
+            onDismiss = { viewModel.closeDialog() }
+        )
+    }
+    uiState.dialogState.openLoadOtherDialog -> {
+        LoadSynthesisSheet(
+            visible = true,
+            drafts = allSynDrafts,
+            onDismiss = { viewModel.closeDialog() },
+            onPick = { draft ->
+                viewModel.loadDraftFrom(draft)
+                viewModel.closeDialog()
+            }
+        )
+    }
+
+ */
+        uiState.photoDialogState.openLoadMaterialDialog -> {
             LoadSynthesisSheet(
                 visible = true,
                 drafts = allSynDrafts,
                 onDismiss = { viewModel.closeDialog() },
                 onPick = { draft ->
-                    viewModel.loadDraftFrom(draft)
+                    viewModel.onAction(PhotoEditAction.UpdateCatalystName(draft.materialName))
                     viewModel.closeDialog()
                 }
             )
         }
+
     }
     BackConfirmDialog(
         visible = showBackConfirmDialog,
         onDismiss = { showBackConfirmDialog = false },
         onNavigateBack = { navController.popBackStack() }
     )
-     */
 }

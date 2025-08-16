@@ -71,8 +71,12 @@ class PhotoEditViewModel @Inject constructor(
 
     fun onAction(a: PhotoEditAction) {
         when (a) {
-            is PhotoEditAction.PickExistingCatalyst -> {
-                // 交给 UI 弹选择器，不改状态
+            PhotoEditAction.PickExistingCatalyst -> {
+                _uiState.update {
+                    it.copy(
+                        photoDialogState = it.photoDialogState.copy(openLoadMaterialDialog = true)
+                    )
+                }
             }
 
             is PhotoEditAction.UpdateCatalystName ->
@@ -109,11 +113,19 @@ class PhotoEditViewModel @Inject constructor(
                 )) }
 
             is PhotoEditAction.UpdateStepIntervalMinute ->
-                _uiState.update { it.copy(draft = it.draft.copy(
-                    steps = it.draft.steps.map { s ->
-                        if (s.orderIndex == a.orderIndex) s.copy(intervalMinuteText = a.text) else s
-                    }
-                )) }
+                _uiState.update {
+                    val n = a.text.toIntOrNull()?.coerceAtLeast(0) ?: 0
+                    val millis = n * 60_000L
+                    it.copy(
+                        draft = it.draft.copy(
+                            steps = it.draft.steps.map { s ->
+                                if (s.orderIndex == a.orderIndex) s.copy(
+                                    timer = s.timer.copy(requiredMillis = millis)
+                                ) else s
+                            }
+                        )
+                    )
+                }
 
             is PhotoEditAction.UpdateStepConcValue ->
                 _uiState.update { it.copy(draft = it.draft.copy(
@@ -161,6 +173,7 @@ class PhotoEditViewModel @Inject constructor(
 
             PhotoEditAction.Save -> save()
             PhotoEditAction.Edit -> _uiState.update { it.copy(mode = PhotocatalysisMode.EDIT) }
+
         }
     }
 
@@ -169,9 +182,10 @@ class PhotoEditViewModel @Inject constructor(
         viewModelScope.launch {
             val cur = _uiState.value
             val draft = cur.draft
-            repo.upsert(draft)    // 新增返回新id；更新返回原id
+            val dbId = repo.upsert(draft)    // 新增返回新id；更新返回原id
             _uiState.update {
                 it.copy(
+                    draft = it.draft.copy(dbId = dbId),
                     mode = PhotocatalysisMode.VIEW,
                     error = null
                 )
@@ -185,7 +199,7 @@ class PhotoEditViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun closeDialog() {
-        _uiState.update { it.copy(dialogState = it.dialogState.closeAll()) }
+        _uiState.update { it.copy(photoDialogState = it.photoDialogState.closeAll()) }
     }
 
 }

@@ -16,5 +16,5 @@ class PhotoRepository @Inject constructor() {
 
     // TODO 后台待开发
     fun loadById(dbId: Long): PhotocatalysisDraft? = null
-    fun upsert(draft: PhotocatalysisDraft) {}
+    fun upsert(draft: PhotocatalysisDraft): Long = 0L
 }

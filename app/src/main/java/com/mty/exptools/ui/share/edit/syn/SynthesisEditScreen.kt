@@ -127,7 +127,7 @@ fun SynthesisEditScreen(
                     viewModel.deleteCurrentDraft()
                     viewModel.closeDialog()
                 },
-                dialogTitle = "确认删除当前合成步骤？",
+                dialogTitle = "确认删除当前合成实验？",
                 dialogText = "此操作不可撤回！"
             )
         }

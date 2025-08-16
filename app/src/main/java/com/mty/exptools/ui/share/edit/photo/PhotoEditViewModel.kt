@@ -9,13 +9,16 @@ import com.mty.exptools.domain.photo.PhotocatalysisStep
 import com.mty.exptools.domain.syn.SynthesisDraft
 import com.mty.exptools.repository.PhotoRepository
 import com.mty.exptools.ui.PhotoEditRoute
+import com.mty.exptools.util.toast
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,7 +38,7 @@ class PhotoEditViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // 强类型路由（navigation-compose 2.7+）
+            // 强类型路由
             val route = savedStateHandle.toRoute<PhotoEditRoute>()
             val dbId = route.dbId
 
@@ -53,7 +56,8 @@ class PhotoEditViewModel @Inject constructor(
                     PhotoEditUiState(
                         mode = PhotocatalysisMode.VIEW,
                         draft = loaded,
-                        currentStepIndex = 0,
+                        currentStepIndex = loaded.currentStepIndex,
+                        running = loaded.steps[loaded.currentStepIndex].timer.isRunning(),
                         loading = false
                     )
                 } else {
@@ -67,6 +71,29 @@ class PhotoEditViewModel @Inject constructor(
                 }
             }
         }
+        // 每过10秒刷新浏览模式的剩余时间和状态
+        viewModelScope.launch {
+            while (isActive) {
+                delay(10_000)
+                val state = _uiState.value
+                if (state.mode == PhotocatalysisMode.VIEW && state.running) {
+                    _tick.update { it + 1 }
+                    // 如果已经完成，则跳转至下一步或者完成所有步骤（数据结构设计之初就考虑了这种情况，只需更新UI即可）
+                    if (state.draft.steps[state.currentStepIndex].timer.isFinished())
+                        _uiState.update {
+                            val currentIndex = it.currentStepIndex
+                            val hasNext = currentIndex < it.draft.steps.lastIndex
+                            it.copy(
+                                draft = it.draft.copy(
+                                    completedAt = if (hasNext) null else it.draft.completedAt
+                                ),
+                                running = false,
+                                currentStepIndex = if (hasNext) currentIndex + 1 else currentIndex
+                            )
+                        }
+                }
+            }
+        }
     }
 
     fun onAction(a: PhotoEditAction) {
@@ -74,7 +101,7 @@ class PhotoEditViewModel @Inject constructor(
             PhotoEditAction.PickExistingCatalyst -> {
                 _uiState.update {
                     it.copy(
-                        photoDialogState = it.photoDialogState.copy(openLoadMaterialSheet = true),
+                        dialogState = it.dialogState.copy(openLoadMaterialSheet = true),
                         backgroundBlur = true
                     )
                 }
@@ -155,46 +182,322 @@ class PhotoEditViewModel @Inject constructor(
 
             is PhotoEditAction.RemoveStep ->
                 _uiState.update { st ->
+                    val removed = a.orderIndex
+
                     val filtered = st.draft.steps.filterNot { it.orderIndex == a.orderIndex }
+
                     val normalized = if (filtered.isEmpty()) {
-                        listOf(PhotocatalysisStep(orderIndex = 0))
+                        listOf(PhotocatalysisStep())
                     } else {
                         filtered.mapIndexed { idx, s -> s.copy(orderIndex = idx) }
                     }
-                    val newCurrent = st.currentStepIndex.coerceAtMost((normalized.size - 1).coerceAtLeast(0))
+
+                    val newCurrent = when {
+                        st.currentStepIndex > removed -> st.currentStepIndex - 1
+                        st.currentStepIndex >= normalized.size -> normalized.lastIndex
+                        else -> st.currentStepIndex
+                    }
+                    val newRunning = normalized[newCurrent].timer.isRunning()
+
                     st.copy(
                         draft = st.draft.copy(steps = normalized),
-                        currentStepIndex = newCurrent
+                        currentStepIndex = newCurrent,
+                        running = newRunning
                     )
                 }
 
-            is PhotoEditAction.JumpStep ->
-                _uiState.update { st ->
-                    if (st.mode == PhotocatalysisMode.VIEW)
-                        st.copy(currentStepIndex = a.index.coerceIn(0, st.draft.steps.lastIndex))
-                    else st
+            PhotoEditAction.ToggleRun ->
+                _uiState.update { state ->
+                    val idx = state.currentStepIndex
+                    val steps = state.draft.steps.toMutableList()
+                    val cur = steps.getOrNull(idx) ?: return@update state
+                    val newTimer =
+                        if (cur.timer.isRunning()) cur.timer.pause() else cur.timer.start()
+                    steps[idx] = cur.copy(timer = newTimer)
+
+                    // 持久化时间信息
+                    viewModelScope.launch {
+                        repo.updateStepsTimerByIndex(
+                            dbId = state.draft.dbId,
+                            orderIndexes = listOf(idx),
+                            accumulatedMillis = newTimer.accumulatedMillis,
+                            startEpochMs = newTimer.startEpochMs
+                        )
+                    }
+
+                    val now = System.currentTimeMillis()
+                    var remaining = 0L
+                    for (index in idx until steps.size) {
+                        remaining += steps[index].timer.remaining()
+                    }
+                    val completedAt = if (newTimer.isRunning()) now + remaining else null
+                    setCompletedAt(completedAt)
+
+                    state.copy(
+                        draft = state.draft.copy(steps = steps, completedAt = completedAt),
+                        running = newTimer.isRunning()
+                    )
                 }
+
+            is PhotoEditAction.JumpStep -> {
+                val targetIdx = a.index
+                val currentIdx = _uiState.value.currentStepIndex
+
+                when {
+                    targetIdx < currentIdx -> {
+                        _uiState.update {
+                            it.copy(
+                                dialogState = it.dialogState.copy(openPrevConfirmDialog = true),
+                                jumpTargetIndex = targetIdx,
+                                backgroundBlur = true
+                            )
+                        }
+                    }
+                    targetIdx > currentIdx -> {
+                        _uiState.update {
+                            it.copy(
+                                dialogState = it.dialogState.copy(openSubsConfirmDialog = true),
+                                jumpTargetIndex = targetIdx,
+                                backgroundBlur = true
+                            )
+                        }
+                    }
+                    // 对于最后一步，如果还未完成，点击自身为完成
+                    else -> {
+                        val hasNext = uiState.value.currentStepIndex < _uiState.value.draft.steps.lastIndex
+                        if (!hasNext && !uiState.value.draft.isFinished)
+                            _uiState.update {
+                                it.copy(
+                                    dialogState = it.dialogState.copy(openCompleteConfirmDialog = true),
+                                    backgroundBlur = true
+                                )
+                            }
+                    }
+                }
+            }
 
             PhotoEditAction.Save -> save()
             PhotoEditAction.Edit -> _uiState.update { it.copy(mode = PhotocatalysisMode.EDIT) }
 
+            PhotoEditAction.DeleteDraft -> _uiState.update {
+                it.copy(
+                    dialogState = it.dialogState.copy(openDeleteConfirmDialog = true),
+                    backgroundBlur = true
+                )
+            }
+
+            PhotoEditAction.ManualCompletedAt ->
+                _uiState.update {
+                    it.copy(
+                        dialogState = it.dialogState.copy(openManualCompleteAtDialog = true),
+                        backgroundBlur = true
+                    )
+                }
+
+            PhotoEditAction.LoadPhoto ->
+                _uiState.update {
+                    it.copy(
+                        dialogState = it.dialogState.copy(openLoadOtherSheet = true),
+                        backgroundBlur = true
+                    )
+                }
         }
     }
 
     /** 保存：使用 upsert（不检查名称重复；id=0 视为新增） */
     private fun save() {
         viewModelScope.launch {
-            val cur = _uiState.value
-            val draft = cur.draft
-            val dbId = repo.upsert(draft)    // 新增返回新id；更新返回原id
-            _uiState.update {
-                it.copy(
-                    draft = it.draft.copy(dbId = dbId),
-                    mode = PhotocatalysisMode.VIEW,
-                    error = null
-                )
+            val currentState = _uiState.value
+            val currentDraft = currentState.draft
+            currentDraft.catalystName.ifBlank {
+                toast("催化剂名称不能为空！")
+                return@launch
+            }
+            val dbId = repo.upsert(currentDraft)    // 新增返回新id；更新返回原id
+
+            // 编辑后当前步骤索引
+            val currentStepIndex = currentDraft.currentStepIndex
+
+            val now = System.currentTimeMillis()
+            var completedAt: Long? = null
+            when {
+                // 若draft已完成，则处理
+                currentDraft.isFinished -> {
+                    // 删除所有未完成的步骤
+                    if (currentDraft.completedAt == null || currentDraft.completedAt > now) {
+                        setCompletedAt(now)
+                        completedAt = now
+                        // 删除操作，且原本就已完成
+                    } else {
+                        completedAt = currentDraft.completedAt
+                    }
+                    _uiState.update {
+                        it.copy(
+                            mode = PhotocatalysisMode.VIEW, running = false,
+                            currentStepIndex = currentStepIndex,
+                            draft = it.draft.copy(dbId = dbId, completedAt = completedAt)
+                        )
+                    }
+                }
+                // 若draft未完成，则暂停
+                else -> {
+                    val steps = currentState.draft.steps.toMutableList()
+                    val cur = steps.getOrNull(currentStepIndex) ?: return@launch
+                    // 若未暂停，则进行暂停
+                    if (cur.timer.isRunning()) {
+                        val newTimer = cur.timer.pause()
+                        steps[currentStepIndex] = cur.copy(timer = newTimer)
+                        repo.updateStepsTimerByIndex(
+                            dbId = currentState.draft.dbId,
+                            orderIndexes = listOf(currentStepIndex),
+                            accumulatedMillis = newTimer.accumulatedMillis,
+                            startEpochMs = newTimer.startEpochMs
+                        )
+                        setCompletedAt(null)
+                        _uiState.update {
+                            it.copy(
+                                mode = PhotocatalysisMode.VIEW, running = false,
+                                currentStepIndex = currentStepIndex,
+                                draft = it.draft.copy(dbId = dbId, steps = steps, completedAt = null)
+                            )
+                        }
+                        // 若已暂停，则可以不用处理完成时间
+                    } else {
+                        // 这里还是需要设置一次null，因为如果原本是running，但是running的那个步骤被删除了，则不会变为null
+                        setCompletedAt(null)
+                        _uiState.update {
+                            it.copy(
+                                mode = PhotocatalysisMode.VIEW, running = false,
+                                currentStepIndex = currentStepIndex,
+                                draft = it.draft.copy(dbId = dbId, completedAt = null)
+                            )
+                        }
+                    }
+                }
             }
         }
+    }
+
+    fun completeLastStep() {
+        _uiState.update { state ->
+            val idx = state.currentStepIndex
+            val steps = state.draft.steps.toMutableList()
+            val cur = steps.getOrNull(idx) ?: return@update state
+            steps[idx] = cur.copy(timer = cur.timer.complete())
+
+            // 持久化时间信息
+            viewModelScope.launch {
+                repo.updateStepsTimerByIndex(
+                    dbId = state.draft.dbId,
+                    orderIndexes = listOf(idx),
+                    accumulatedMillis = steps[idx].timer.accumulatedMillis,
+                    startEpochMs = steps[idx].timer.startEpochMs
+                )
+            }
+
+            val now = System.currentTimeMillis()
+            setCompletedAt(now)
+
+            state.copy(
+                draft = state.draft.copy(steps = steps, completedAt = now),
+                running = false // 按需求：自动暂停
+            )
+        }
+    }
+
+    fun goToPreviousStep() {
+        val targetIndex = uiState.value.jumpTargetIndex
+        if (targetIndex == null) return
+        _uiState.update { state ->
+            val currentIndex = state.currentStepIndex
+            if (currentIndex <= 0 || targetIndex >= currentIndex) return@update state
+            val steps = state.draft.steps.toMutableList()
+            if (currentIndex > steps.lastIndex) return@update state
+
+            // 复位沿路所有步骤
+            for (idx in targetIndex .. currentIndex) {
+                steps[idx] = steps[idx].copy(timer = steps[idx].timer.reset())
+            }
+
+            // 持久化时间信息
+            viewModelScope.launch {
+                repo.updateStepsTimerByIndex(
+                    dbId = state.draft.dbId,
+                    orderIndexes = (targetIndex .. currentIndex).toList(),
+                    accumulatedMillis = steps[targetIndex].timer.accumulatedMillis,
+                    startEpochMs = steps[targetIndex].timer.startEpochMs
+                )
+            }
+
+            setCompletedAt(null)
+
+            state.copy(
+                draft = state.draft.copy(steps = steps, completedAt = null),
+                currentStepIndex = targetIndex,
+                running = false // 自动暂停
+            )
+        }
+    }
+
+    fun goToSubsequentStep() {
+        val targetIndex = uiState.value.jumpTargetIndex
+        if (targetIndex == null) return
+        _uiState.update { state ->
+            val currentIndex = state.currentStepIndex
+            if (currentIndex < 0 || targetIndex <= currentIndex) return@update state
+            val steps = state.draft.steps.toMutableList()
+            if (targetIndex > steps.lastIndex) return@update state
+
+            // 完成沿路所有步骤
+            for (idx in currentIndex until targetIndex) {
+                steps[idx] = steps[idx].copy(timer = steps[idx].timer.complete())
+            }
+            // 持久化时间信息
+            viewModelScope.launch {
+                repo.completeStepsByIndex(
+                    dbId = state.draft.dbId,
+                    orderIndexes = (currentIndex until targetIndex).toList(),
+                )
+            }
+
+            setCompletedAt(null)
+
+            state.copy(
+                draft = state.draft.copy(steps = steps, completedAt = null),
+                currentStepIndex = targetIndex,
+                running = false // 自动暂停
+            )
+        }
+    }
+
+    fun deleteCurrentDraft() {
+        viewModelScope.launch {
+            val result = repo.deleteDraftByDbId(_uiState.value.draft.dbId)
+            toast(if (result) "删除成功" else "删除失败")
+
+            _uiState.value = PhotoEditUiState(
+                mode = PhotocatalysisMode.EDIT,
+                draft = PhotocatalysisDraft(),
+                loading = false
+            )
+        }
+    }
+
+    private fun setCompletedAt(time: Long?) {
+        val state = _uiState.value
+        // 不重复更新
+        if (state.draft.completedAt == time) return
+        val dbId = state.draft.dbId
+        viewModelScope.launch { repo.setCompletedAt(dbId, time) }
+    }
+
+    fun setCompletedAtWithUiState(time: Long?) {
+        val state = _uiState.value
+        // 不重复更新
+        if (state.draft.completedAt == time) return
+        val dbId = state.draft.dbId
+        viewModelScope.launch { repo.setCompletedAt(dbId, time) }
+        _uiState.update { it.copy(draft = it.draft.copy(completedAt = time)) }
     }
 
     // 用 Flow 暴露“全量列表”给导入对话框
@@ -202,10 +505,26 @@ class PhotoEditViewModel @Inject constructor(
         repo.observeAllSynDrafts() // Flow<List<SynthesisDraft>>
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // 用 Flow 暴露“全量列表”给导入对话框
+    val allPhotoDrafts: StateFlow<List<PhotocatalysisDraft>> =
+        repo.observeAllPhotoDrafts()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // 全量导入选中的草稿
+    fun loadDraftFrom(selected: PhotocatalysisDraft) {
+        _uiState.update { state ->
+            val newDraft = selected.copy(
+                completedAt = null,
+                steps = selected.steps.map { it.copy(timer = it.timer.reset()) }
+            )
+            state.copy(draft = newDraft)
+        }
+    }
+
     fun closeDialog() {
         _uiState.update {
             it.copy(
-                photoDialogState = it.photoDialogState.closeAll(),
+                dialogState = it.dialogState.closeAll(),
                 backgroundBlur = false
             )
         }

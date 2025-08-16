@@ -3,6 +3,7 @@ package com.mty.exptools.ui.share.edit.photo
 import com.mty.exptools.domain.photo.ConcUnit
 import com.mty.exptools.domain.photo.LightSource
 import com.mty.exptools.domain.photo.PhotoTargetMaterial
+import com.mty.exptools.ui.share.edit.syn.SynthesisAction
 
 sealed interface PhotoEditAction {
     // 顶部：催化剂名称 & 选择已有
@@ -29,9 +30,15 @@ sealed interface PhotoEditAction {
     object AddStep : PhotoEditAction
     data class RemoveStep(val orderIndex: Int) : PhotoEditAction
 
+    /** 开/停当前步骤） */
+    object ToggleRun : PhotoEditAction
     // 浏览态点击步骤跳转（由 VM 决定是否弹确认框/如何跳转）
     data class JumpStep(val index: Int) : PhotoEditAction
 
     object Edit : PhotoEditAction
     object Save : PhotoEditAction
+    object DeleteDraft : PhotoEditAction
+
+    object ManualCompletedAt : PhotoEditAction
+    object LoadPhoto : PhotoEditAction
 }

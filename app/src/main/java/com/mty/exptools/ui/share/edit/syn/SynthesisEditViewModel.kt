@@ -199,7 +199,7 @@ class SynthesisEditViewModel @Inject constructor(
                             toast("材料名称已经存在！")
                             return@launch
                         }
-                        currentDraft.materialName == "" -> {
+                        currentDraft.materialName.isBlank() -> {
                             toast("材料名称不能为空！")
                             return@launch
                         }
@@ -341,9 +341,6 @@ class SynthesisEditViewModel @Inject constructor(
                     }
                 }
             }
-
-            is SynthesisAction.SetCurrentIndex ->
-                _uiState.update { it.copy(currentStepIndex = a.index.coerceIn(0, it.draft.steps.lastIndex)) }
 
             SynthesisAction.DeleteDraft ->
                 _uiState.update {

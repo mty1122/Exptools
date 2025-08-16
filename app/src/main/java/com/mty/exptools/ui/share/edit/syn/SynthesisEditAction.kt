@@ -27,7 +27,4 @@ sealed interface SynthesisAction {
 
     object ManualCompletedAt : SynthesisAction
     object LoadSynthesis : SynthesisAction
-
-    /** 可选：手动指定当前步骤（浏览模式下高亮/开始于某步） */
-    data class SetCurrentIndex(val index: Int) : SynthesisAction
 }

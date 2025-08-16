@@ -1,4 +1,4 @@
-package com.mty.exptools.ui.share.edit.syn
+package com.mty.exptools.ui.share.edit.photo
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,54 +34,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.mty.exptools.domain.syn.SynthesisDraft
+import com.mty.exptools.domain.photo.PhotocatalysisDraft
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoadSynthesisSheet(
+fun LoadPhotoSheet(
     visible: Boolean,
-    drafts: List<SynthesisDraft>,        // 来自 VM 的列表（Flow 收集后传进来）
+    drafts: List<PhotocatalysisDraft>,
     onDismiss: () -> Unit,
-    setBackgroundBlur: (Boolean) -> Unit = {},    // 控制背景模糊
-    onPick: (SynthesisDraft) -> Unit     // 选定后回调
+    setBackgroundBlur: (Boolean) -> Unit = {},
+    onPick: (PhotocatalysisDraft) -> Unit
 ) {
     if (!visible) return
 
     var query by remember { mutableStateOf("") }
-    var selected by remember { mutableStateOf<String?>(null) }
+    var selectedId by remember { mutableStateOf<Long?>(null) }
 
     val filtered = remember(drafts, query) {
         val q = query.trim().lowercase()
         if (q.isEmpty()) drafts
         else drafts.filter { d ->
-            d.materialName.lowercase().contains(q) ||
-                    d.rawMaterials.lowercase().contains(q) ||
-                    d.conditionSummary.lowercase().contains(q)
+            d.catalystName.lowercase().contains(q) ||
+                    d.target.name.lowercase().contains(q) ||
+                    d.light.value.lowercase().contains(q)
         }
     }
 
-    // 监听 sheet 状态，调整背景模糊
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // 根据目标状态切换背景模糊：目标 Hidden → 关闭模糊；其余 → 打开
     LaunchedEffect(sheetState.targetValue) {
-        when (sheetState.targetValue) {
-            SheetValue.Hidden -> setBackgroundBlur(false)
-            else -> setBackgroundBlur(true)
-        }
+        setBackgroundBlur(sheetState.targetValue != SheetValue.Hidden)
     }
 
     ModalBottomSheet(
         sheetState = sheetState,
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text("导入已有材料", style = MaterialTheme.typography.titleLarge)
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text("导入光催化实验", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
                 singleLine = true,
-                label = { Text("搜索名称/原料/摘要") },
+                label = { Text("搜索催化剂/目标/光源") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -90,9 +92,11 @@ fun LoadSynthesisSheet(
 
             if (filtered.isEmpty()) {
                 Box(
-                    Modifier.fillMaxWidth().height(200.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
                     contentAlignment = Alignment.Center
-                ) { Text("没有匹配的材料") }
+                ) { Text("没有匹配的记录") }
             } else {
                 LazyColumn(
                     modifier = Modifier
@@ -100,51 +104,55 @@ fun LoadSynthesisSheet(
                         .heightIn(max = 420.dp),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    items(filtered, key = { it.materialName }) { d ->
+                    items(filtered, key = { it.dbId }) { d ->
+                        val isSelected = selectedId == d.dbId
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    selected = d.materialName
-                                }
+                                .clickable { selectedId = d.dbId }
                                 .padding(horizontal = 4.dp, vertical = 10.dp)
                         ) {
                             RadioButton(
-                                selected = selected == d.materialName,
-                                onClick = { selected = d.materialName }
+                                selected = isSelected,
+                                onClick = { selectedId = d.dbId }
                             )
                             Text(
-                                d.materialName,
+                                text = d.catalystName.ifBlank { "（未命名催化剂）" },
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = if (selected == d.materialName) FontWeight.SemiBold else FontWeight.Normal,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                 modifier = Modifier.padding(start = 6.dp)
                             )
                             Spacer(Modifier.weight(1f))
                             Text("步骤 ${d.steps.size}", style = MaterialTheme.typography.labelMedium)
                         }
 
-                        val sub = d.conditionSummary.takeIf { it.isNotBlank() } ?: d.rawMaterials
-                        if (sub.isNotBlank()) {
-                            Text(
-                                text = sub.take(60),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(start = 44.dp, end = 8.dp, bottom = 8.dp)
-                            )
-                        }
+                        val subLine = listOf(
+                            d.target.name.takeIf { it.isNotBlank() } ?: "目标（未填）",
+                            d.light.value.ifBlank { "光源（未填）" }
+                        ).joinToString(" · ")
+
+                        Text(
+                            text = subLine,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 44.dp, end = 8.dp, bottom = 8.dp)
+                        )
                     }
                 }
             }
 
             Spacer(Modifier.height(8.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 OutlinedButton(
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f)
                 ) { Text("取消") }
 
-                val picked = filtered.firstOrNull { it.materialName == selected }
+                val picked = filtered.firstOrNull { it.dbId == selectedId }
                 Button(
                     onClick = { picked?.let(onPick) },
                     enabled = picked != null,

@@ -6,7 +6,7 @@ data class PhotocatalysisStep(
     val orderIndex: Int = 0,
     val name: String = "",
     val concValueText: String = "",
-    val concUnit: ConcUnit = ConcUnit.MG_L,
+    val concUnit: ConcUnit = ConcUnit.ABSORBANCE_A,
     val timer: StepTimer = StepTimer(requiredMillis = 30 * 60 * 1000L) // 默认30分钟
 ) {
     fun duration() = timer.requiredMillis / 1000 / 60

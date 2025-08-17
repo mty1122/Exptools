@@ -94,8 +94,8 @@ interface SynthesisDao {
     @Query("UPDATE synthesis_draft SET completed_at = :completedTime, updated_at = :updateTime WHERE id = :id")
     suspend fun setCompletedAt(id: Long, completedTime: Long?, updateTime: Long)
 
-
     // 用于列表读取
+    @Transaction
     @Query("SELECT * FROM synthesis_draft")
     fun observeAllDraftWithSteps(): Flow<List<SynthesisDraftWithSteps>>
 

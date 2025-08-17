@@ -88,7 +88,9 @@ fun ListScreen(
         ) {
             items(itemUiStateList, key = { it.listItemId }) { uiState ->
                 when (uiState) {
-                    is ItemPhotoUiState -> ItemPhotocatalysis(uiState)
+                    is ItemPhotoUiState -> ItemPhotocatalysis(uiState) {
+                        topNavController.navigate(PhotoEditRoute(uiState.dbId))
+                    }
                     is ItemSynUiState -> ItemSynthesis(uiState) {
                         topNavController.navigate(SynthesisEditRoute(uiState.materialName))
                     }

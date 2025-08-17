@@ -2,8 +2,6 @@ package com.mty.exptools.ui.share.edit.photo
 
 import com.mty.exptools.domain.photo.ConcUnit
 import com.mty.exptools.domain.photo.LightSource
-import com.mty.exptools.domain.photo.PhotoTargetMaterial
-import com.mty.exptools.ui.share.edit.syn.SynthesisAction
 
 sealed interface PhotoEditAction {
     // 顶部：催化剂名称 & 选择已有

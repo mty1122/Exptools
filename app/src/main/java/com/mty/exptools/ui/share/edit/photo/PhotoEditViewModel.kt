@@ -51,7 +51,7 @@ class PhotoEditViewModel @Inject constructor(
                 )
             } else {
                 // 加载已有实验
-                val loaded = repo.loadById(dbId)
+                val loaded = repo.getById(dbId)
                 _uiState.value = if (loaded != null) {
                     PhotoEditUiState(
                         mode = PhotocatalysisMode.VIEW,

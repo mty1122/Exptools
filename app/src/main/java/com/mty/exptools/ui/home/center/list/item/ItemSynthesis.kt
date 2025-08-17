@@ -28,6 +28,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mty.exptools.R
 import com.mty.exptools.ui.theme.ExptoolsTheme
+import com.mty.exptools.util.MillisTime
+import com.mty.exptools.util.asString
 
 @Composable
 fun ItemSynthesis(
@@ -58,14 +60,14 @@ fun ItemSynthesis(
                     contentDescription = "合成任务",
                     modifier = Modifier
                         .size(40.dp)
-                        .padding(end = 8.dp)
+                        .padding(end = 6.dp)
                 )
 
                 // 中间文本区域
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 8.dp)
+                        .padding(horizontal = 6.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -77,7 +79,10 @@ fun ItemSynthesis(
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = statusToString(uiState.status, uiState.timeUnit),
+                            text = statusToString(
+                                uiState.status,
+                                uiState.rightTime.toTime().unit.asString()
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -103,10 +108,10 @@ fun ItemSynthesis(
 
                 // 右侧状态数字
                 Text(
-                    text = uiState.rightTimes.toString(),
+                    text = uiState.rightTime.toTime().value.toInt().toString(),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
 
@@ -133,7 +138,7 @@ fun ItemSynthesis(
 
 private fun statusToString(status: ItemStatus, timeUnit: String) = when(status) {
     ItemStatus.STATUS_PAUSE -> "（已暂停）距离结束（${timeUnit}）"
-    ItemStatus.STATUS_START -> "距离结束（${timeUnit}）"
+    ItemStatus.STATUS_START -> "距离当前步骤结束（${timeUnit}）"
     ItemStatus.STATUS_COMPLETE -> "已完成（${timeUnit}）"
 }
 
@@ -147,8 +152,7 @@ fun ItemItemSynthesisPreview() {
             targetStep = "120℃ 14h 水热反应 | 1号釜 小烘箱",
             nextStep = "60℃ 干燥 12小时",
             progress = 0.6f,
-            rightTimes = "20",
-            timeUnit = "天",
+            rightTime = MillisTime(1_728_000_000),
             status = ItemStatus.STATUS_START
         )
         ItemSynthesis(uiState)

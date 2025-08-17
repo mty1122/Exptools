@@ -1,10 +1,12 @@
 package com.mty.exptools.ui.home.center.list.item
 
+import com.mty.exptools.util.MillisTime
+
 data class ItemTestUiState(
     override val listItemId: Int,
     val materialName: String,
     val testInfo: String,
     val testDate: String,
-    val rightTimes: Int,
-    val status: ItemStatus
+    override val rightTime: MillisTime,
+    override val status: ItemStatus
 ): ItemUiState

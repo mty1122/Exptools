@@ -56,6 +56,7 @@ import com.mty.exptools.domain.photo.calcPerformance
 import com.mty.exptools.domain.photo.toMgL
 import com.mty.exptools.util.MillisTime
 import com.mty.exptools.util.asString
+import kotlin.math.absoluteValue
 
 @Composable
 fun PhotoEditForm(
@@ -407,8 +408,15 @@ private fun TargetCard(
                         append(target.stdCurveK)
                         append("c")
                         if (target.stdCurveB.isNotBlank()) {
-                            append(" + ")
-                            append(target.stdCurveB)
+                            val doubleB = target.stdCurveB.toDoubleOrNull()
+                            if (doubleB != null && doubleB < 0) {
+                                append(" - ")
+                                append(doubleB.absoluteValue)
+                            }
+                            else {
+                                append(" + ")
+                                append(target.stdCurveB)
+                            }
                         }
                     }
                     Spacer(Modifier.height(6.dp))
@@ -584,7 +592,7 @@ private fun ConcUnitSegment(
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
             .padding(2.dp)
     ) {
-        SegBtn("   A   ", selected == ConcUnit.ABSORBANCE_A) { onSelected(ConcUnit.ABSORBANCE_A) }
+        SegBtn("    A    ", selected == ConcUnit.ABSORBANCE_A) { onSelected(ConcUnit.ABSORBANCE_A) }
         SegBtn("   mg/L   ", selected == ConcUnit.MG_L) { onSelected(ConcUnit.MG_L) }
     }
 }

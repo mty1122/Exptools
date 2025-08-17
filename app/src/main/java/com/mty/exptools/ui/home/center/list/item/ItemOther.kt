@@ -1,5 +1,6 @@
 package com.mty.exptools.ui.home.center.list.item
 
+import android.icu.util.TimeUnit
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mty.exptools.R
 import com.mty.exptools.ui.theme.ExptoolsTheme
+import com.mty.exptools.util.MillisTime
+import com.mty.exptools.util.asString
 
 @Composable
 fun ItemOther(
@@ -49,14 +52,14 @@ fun ItemOther(
                     contentDescription = "测试任务",
                     modifier = Modifier
                         .size(40.dp)
-                        .padding(end = 8.dp)
+                        .padding(end = 6.dp)
                 )
 
                 // 中间文本区域
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 8.dp)
+                        .padding(horizontal = 6.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -68,7 +71,7 @@ fun ItemOther(
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = statusToString(uiState.status),
+                            text = statusToString(uiState.status, uiState.rightTime.toTime().unit),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -84,19 +87,19 @@ fun ItemOther(
 
                 // 右侧状态数字
                 Text(
-                    text = uiState.rightTimes.toString(),
+                    text = uiState.rightTime.toTime().value.toInt().toString(),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
         }
     }
 }
 
-private fun statusToString(status: ItemStatus) = when(status) {
-    ItemStatus.STATUS_START -> "距离结束（天）"
-    ItemStatus.STATUS_COMPLETE -> "已结束（天）"
+private fun statusToString(status: ItemStatus, timeUnit: TimeUnit) = when(status) {
+    ItemStatus.STATUS_START -> "距离结束（${timeUnit.asString()}）"
+    ItemStatus.STATUS_COMPLETE -> "已结束（${timeUnit.asString()}）"
     else -> ""
 }
 
@@ -109,7 +112,7 @@ fun ItemItemOtherPreview() {
             title = "某文章撰写",
             info = "引言部分",
             endDate = "2025.03.12",
-            rightTimes = 20,
+            rightTime = MillisTime(1_728_000_000),
             status = ItemStatus.STATUS_COMPLETE
         )
         ItemOther(uiState)

@@ -1,5 +1,7 @@
 package com.mty.exptools.ui.home.center.list.item
 
+import com.mty.exptools.util.MillisTime
+
 data class ItemSynUiState(
     override val listItemId: Int,
     val materialName: String,
@@ -7,7 +9,6 @@ data class ItemSynUiState(
     val nextStep: String = "",
     val completeInfo: String = "",
     val progress: Float = 0f,
-    val rightTimes: String,
-    val timeUnit: String,
-    val status: ItemStatus
+    override val rightTime: MillisTime,
+    override val status: ItemStatus
 ): ItemUiState

@@ -1,5 +1,6 @@
 package com.mty.exptools.ui.home.center.list.item
 
+import android.icu.util.TimeUnit
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -30,6 +31,8 @@ import com.mty.exptools.R
 import com.mty.exptools.domain.photo.LightSource
 import com.mty.exptools.domain.photo.PhotoTargetMaterial
 import com.mty.exptools.ui.theme.ExptoolsTheme
+import com.mty.exptools.util.MillisTime
+import com.mty.exptools.util.asString
 
 @Composable
 fun ItemPhotocatalysis(
@@ -60,14 +63,14 @@ fun ItemPhotocatalysis(
                     contentDescription = "光催化任务",
                     modifier = Modifier
                         .size(40.dp)
-                        .padding(end = 8.dp)
+                        .padding(end = 6.dp)
                 )
 
                 // 中间文本区域
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 8.dp)
+                        .padding(horizontal = 6.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -79,7 +82,7 @@ fun ItemPhotocatalysis(
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = statusToString(uiState.status),
+                            text = statusToString(uiState.status, uiState.rightTime.toTime().unit),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -92,9 +95,12 @@ fun ItemPhotocatalysis(
                             append(uiState.target.name)
                             if (uiState.target.waveLength != "")
                                 append(" | ${uiState.target.waveLength}nm")
-                            append(" | ${uiState.lightSource}")
-                            if (uiState.status != ItemStatus.STATUS_COMPLETE)
-                                append("\n距离结束 ${uiState.totalMinutes - uiState.elapsedMinutes} 分钟")
+                            append(" | ${uiState.lightSource.value}")
+                            if (uiState.status != ItemStatus.STATUS_COMPLETE) {
+                                append("\n预计结束于 ${uiState.remainTime.stringValue} ")
+                                append(uiState.remainTime.unit.asString())
+                                append("后")
+                            }
                         },
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -102,10 +108,10 @@ fun ItemPhotocatalysis(
 
                 // 右侧状态数字
                 Text(
-                    text = uiState.rightTimes.toString(),
+                    text = uiState.rightTime.toTime().value.toInt().toString(),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
 
@@ -130,10 +136,10 @@ fun ItemPhotocatalysis(
     }
 }
 
-private fun statusToString(status: ItemStatus) = when(status) {
-    ItemStatus.STATUS_PAUSE -> "（已暂停）下次测量（分钟）"
-    ItemStatus.STATUS_START -> "下次测量（分钟）"
-    ItemStatus.STATUS_COMPLETE -> "已完成（天）"
+private fun statusToString(status: ItemStatus, timeUnit: TimeUnit) = when(status) {
+    ItemStatus.STATUS_PAUSE -> "（已暂停）下次测量（${timeUnit.asString()}）"
+    ItemStatus.STATUS_START -> "下次测量（${timeUnit.asString()}）"
+    ItemStatus.STATUS_COMPLETE -> "已完成（${timeUnit.asString()}）"
 }
 
 @Preview(showBackground = true)
@@ -145,10 +151,9 @@ fun ItemPhotocatalysisPreview() {
             materialName = "钨酸铋-实验2-22",
             target = PhotoTargetMaterial.TC,
             lightSource = LightSource.XENON_L,
-            elapsedMinutes = 85,
-            totalMinutes = 90,
+            remainTime = MillisTime(1_800_000).toTime(),
             progress = 0.75f,
-            rightTimes = 20,
+            rightTime = MillisTime(1_800_000),
             status = ItemStatus.STATUS_START
         )
         ItemPhotocatalysis(uiState)

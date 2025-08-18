@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.mty.exptools.ui.PhotoEditRoute
 import com.mty.exptools.ui.SynthesisEditRoute
+import com.mty.exptools.ui.TestEditRoute
 import com.mty.exptools.ui.home.center.list.item.ItemOther
 import com.mty.exptools.ui.home.center.list.item.ItemOtherUiState
 import com.mty.exptools.ui.home.center.list.item.ItemPhotoUiState
@@ -94,7 +95,9 @@ fun ListScreen(
                     is ItemSynUiState -> ItemSynthesis(uiState) {
                         topNavController.navigate(SynthesisEditRoute(uiState.materialName))
                     }
-                    is ItemTestUiState -> ItemTest(uiState)
+                    is ItemTestUiState -> ItemTest(uiState) {
+                        topNavController.navigate(TestEditRoute(uiState.dbId))
+                    }
                     is ItemOtherUiState -> ItemOther(uiState)
                 }
             }
@@ -111,7 +114,9 @@ fun ListScreen(
                     ItemType.PHOTOCATALYSIS -> {
                         topNavController.navigate(PhotoEditRoute())
                     }
-                    ItemType.TEST -> {}
+                    ItemType.TEST -> {
+                        topNavController.navigate(TestEditRoute())
+                    }
                     ItemType.OTHER -> {}
                 }
             },

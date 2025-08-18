@@ -28,6 +28,7 @@ data class PhotoEditUiState(
     val draft: PhotocatalysisDraft = PhotocatalysisDraft(),
     val currentStepIndex: Int = 0,     // 浏览态当前步高亮
     val loading: Boolean = false,
+    val isNew: Boolean = false,
     val running: Boolean = false,
     val dialogState: PhotoDialogState = PhotoDialogState(),
     val backgroundBlur: Boolean = false,

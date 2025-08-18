@@ -1,4 +1,4 @@
-package com.mty.exptools.ui.share.edit.photo
+package com.mty.exptools.ui.share.edit.test
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,16 +34,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.mty.exptools.domain.photo.PhotocatalysisDraft
+import com.mty.exptools.domain.test.TestDraft
+import com.mty.exptools.util.toMillisTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoadPhotoSheet(
+fun LoadTestSheet(
     visible: Boolean,
-    drafts: List<PhotocatalysisDraft>,
+    drafts: List<TestDraft>,
     onDismiss: () -> Unit,
     setBackgroundBlur: (Boolean) -> Unit = {},
-    onPick: (PhotocatalysisDraft) -> Unit
+    onPick: (TestDraft) -> Unit
 ) {
     if (!visible) return
 
@@ -54,9 +55,9 @@ fun LoadPhotoSheet(
         val q = query.trim().lowercase()
         if (q.isEmpty()) drafts
         else drafts.filter { d ->
-            d.catalystName.lowercase().contains(q) ||
-                    d.target.name.lowercase().contains(q) ||
-                    d.light.value.lowercase().contains(q)
+            d.materialName.lowercase().contains(q) ||
+                    d.summary.lowercase().contains(q) ||
+                    (d.startAt.toMillisTime().toDateTime()).lowercase().contains(q)
         }
     }
 
@@ -76,14 +77,14 @@ fun LoadPhotoSheet(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text("导入已有实验（作为新的实验）", style = MaterialTheme.typography.titleLarge)
+            Text("导入已有测试", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
                 singleLine = true,
-                label = { Text("搜索催化剂/目标/光源") },
+                label = { Text("搜索材料/摘要/开始时间") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -118,25 +119,19 @@ fun LoadPhotoSheet(
                                 onClick = { selectedId = d.dbId }
                             )
                             Text(
-                                text = d.catalystName.ifBlank { "（未命名催化剂）" },
+                                text = d.materialName.ifBlank { "（未命名材料）" },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                 modifier = Modifier.padding(start = 6.dp)
                             )
                             Spacer(Modifier.weight(1f))
                             Text(
-                                text = d.target.name.takeIf { it.isNotBlank() } ?: "目标（未填）",
+                                text = d.startAt.toMillisTime().toDateTime(),
                                 style = MaterialTheme.typography.labelMedium
                             )
                         }
 
-                        val perfList = d.performanceList
-                        val perfText = if (perfList.isEmpty()) "性能（未知）" else
-                            perfList.joinToString(" ")
-                        val subLine = listOf(
-                            d.light.value.ifBlank { "光源（未填）" },
-                            perfText
-                        ).joinToString(" | ")
+                        val subLine = d.summary.takeIf { it.isNotBlank() } ?: "摘要（未填）"
 
                         Text(
                             text = subLine,

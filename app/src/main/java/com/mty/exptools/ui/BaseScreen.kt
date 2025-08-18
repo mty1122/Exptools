@@ -17,6 +17,7 @@ import com.mty.exptools.domain.StepTimer
 import com.mty.exptools.ui.home.HomeScreen
 import com.mty.exptools.ui.share.edit.photo.PhotoEditScreen
 import com.mty.exptools.ui.share.edit.syn.SynthesisEditScreen
+import com.mty.exptools.ui.share.edit.test.TestEditScreen
 
 @Composable
 fun BaseScreen() {
@@ -76,6 +77,25 @@ fun BaseScreen() {
                 onSetAlarmForCurrent = { message, timer ->
                     setSetAlarmForCurrent(context, message, timer)
                 }
+            )
+        }
+
+        composable<TestEditRoute>(
+            enterTransition = {
+                slideInHorizontally(initialOffsetX = { fullWidth -> fullWidth })
+            },
+            exitTransition = {
+                slideOutHorizontally(targetOffsetX = { -it })
+            },
+            popEnterTransition = {
+                slideInHorizontally(initialOffsetX = { -it })
+            },
+            popExitTransition = {
+                slideOutHorizontally(targetOffsetX = { it })
+            }
+        ) {
+            TestEditScreen(
+                navController = topNavController
             )
         }
     }

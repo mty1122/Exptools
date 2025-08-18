@@ -177,6 +177,7 @@ class ListViewModel @Inject constructor(
             dbId = draft.dbId,
             materialName = draft.catalystName,
             target = PhotoTargetMaterial(draft.target.name, draft.target.wavelengthNm),
+            performanceList = draft.performanceList,
             progress = progress,
             lightSource = draft.light,
             remainTime = remaining.toMillisTime().toTime(),

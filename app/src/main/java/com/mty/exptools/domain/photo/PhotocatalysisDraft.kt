@@ -19,4 +19,30 @@ data class PhotocatalysisDraft(
 
     val isFinished: Boolean
         get() = steps.lastOrNull()?.timer?.isFinished() == true
+
+    val performanceList: List<String>
+        get() = getPerfList()
+
+    private fun getPerfList(): List<String> {
+        if (!isFinished) return emptyList()
+        val perfList = List(size = steps.size) { idx ->
+            val step = steps[idx]
+            val c0 = toMgL(
+                valueText = target.initialConcValue,
+                unit = target.initialConcUnit,
+                kText = target.stdCurveK,
+                bText = target.stdCurveB
+            )
+            val ci = toMgL(
+                valueText = step.concValueText,
+                unit = step.concUnit,
+                kText = target.stdCurveK,
+                bText = target.stdCurveB
+            )
+            val perf = calcPerformance(c0, ci)
+            if (perf != null) "${"%.1f".format((perf * 100).coerceIn(0.0, 100.0))}%"
+            else return emptyList()
+        }
+        return perfList
+    }
 }

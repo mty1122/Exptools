@@ -34,7 +34,7 @@ fun SynthesisEditTopBar(
     onDelete: () -> Unit
 ) {
     TopAppBar(
-        title = { Text("合成步骤") },
+        title = { Text("合成") },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")

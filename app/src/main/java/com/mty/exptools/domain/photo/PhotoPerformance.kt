@@ -7,7 +7,7 @@ fun toMgL(valueText: String, unit: ConcUnit, kText: String, bText: String): Doub
         ConcUnit.ABSORBANCE_A -> {
             val a = valueText.toDoubleOrNull() ?: return null
             val k = kText.toDoubleOrNull() ?: return null
-            val b = bText.toDoubleOrNull() ?: return null
+            val b = bText.toDoubleOrNull() ?: 0.0
             if (k <= 0.0) null else (a - b) / k
         }
     }

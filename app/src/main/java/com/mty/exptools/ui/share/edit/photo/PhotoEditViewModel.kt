@@ -47,7 +47,8 @@ class PhotoEditViewModel @Inject constructor(
                 _uiState.value = PhotoEditUiState(
                     mode = PhotocatalysisMode.EDIT,
                     draft = PhotocatalysisDraft(), // 新建
-                    loading = false
+                    loading = false,
+                    isNew = true
                 )
             } else {
                 // 加载已有实验
@@ -66,6 +67,7 @@ class PhotoEditViewModel @Inject constructor(
                         mode = PhotocatalysisMode.EDIT,
                         draft = PhotocatalysisDraft(),
                         loading = false,
+                        isNew = true,
                         error = "未找到记录（id=$dbId），已进入新增模式"
                     )
                 }
@@ -335,7 +337,8 @@ class PhotoEditViewModel @Inject constructor(
                         it.copy(
                             mode = PhotocatalysisMode.VIEW, running = false,
                             currentStepIndex = currentStepIndex,
-                            draft = it.draft.copy(dbId = dbId, completedAt = completedAt)
+                            draft = it.draft.copy(dbId = dbId, completedAt = completedAt),
+                            isNew = false
                         )
                     }
                 }
@@ -358,7 +361,8 @@ class PhotoEditViewModel @Inject constructor(
                             it.copy(
                                 mode = PhotocatalysisMode.VIEW, running = false,
                                 currentStepIndex = currentStepIndex,
-                                draft = it.draft.copy(dbId = dbId, steps = steps, completedAt = null)
+                                draft = it.draft.copy(dbId = dbId, steps = steps, completedAt = null),
+                                isNew = false
                             )
                         }
                         // 若已暂停，则可以不用处理完成时间
@@ -369,7 +373,8 @@ class PhotoEditViewModel @Inject constructor(
                             it.copy(
                                 mode = PhotocatalysisMode.VIEW, running = false,
                                 currentStepIndex = currentStepIndex,
-                                draft = it.draft.copy(dbId = dbId, completedAt = null)
+                                draft = it.draft.copy(dbId = dbId, completedAt = null),
+                                isNew = false
                             )
                         }
                     }
@@ -514,6 +519,7 @@ class PhotoEditViewModel @Inject constructor(
     fun loadDraftFrom(selected: PhotocatalysisDraft) {
         _uiState.update { state ->
             val newDraft = selected.copy(
+                dbId = 0L,
                 completedAt = null,
                 steps = selected.steps.map { it.copy(timer = it.timer.reset()) }
             )

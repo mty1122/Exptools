@@ -13,6 +13,7 @@ data class ItemPhotoUiState(
     val lightSource: LightSource,
     val progress: Float = 1f,
     val remainTime: Time = MillisTime(0).toTime(),
+    val performanceList: List<String> = emptyList(),
     override val rightTime: MillisTime,
     override val status: ItemStatus
 ): ItemUiState

@@ -54,6 +54,7 @@ fun PhotoEditScreen(
                 mode = uiState.mode,
                 running = uiState.running,
                 isFinished = uiState.draft.isFinished,
+                isNew = uiState.isNew,
                 onBack = {
                     if (uiState.mode == PhotocatalysisMode.EDIT)
                         showBackConfirmDialog = true

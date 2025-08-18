@@ -1,13 +1,9 @@
-package com.mty.exptools.ui.share.edit.photo
+package com.mty.exptools.ui.share.edit.test
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,31 +15,26 @@ import androidx.compose.runtime.Composable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PhotoEditTopBar(
-    mode: PhotocatalysisMode,
-    running: Boolean,
-    isFinished: Boolean,
+fun TestEditTopBar(
+    mode: TestMode,
     isNew: Boolean,
     onBack: () -> Unit,
     onLoadOther: () -> Unit,
     onSave: () -> Unit,
     onEdit: () -> Unit,
-    onSetAlarm: () -> Unit,
-    onSetCompletedAt: () -> Unit,
-    onToggleRun: () -> Unit,
     onDelete: () -> Unit
 ) {
     TopAppBar(
         title = {
             Text(
                 when (mode) {
-                    PhotocatalysisMode.EDIT -> {
+                    TestMode.EDIT -> {
                         when {
-                            isNew -> "光催化（新增）"
-                            else -> "光催化（修改）"
+                            isNew -> "测试（新增）"
+                            else -> "测试（修改）"
                         }
                     }
-                    PhotocatalysisMode.VIEW -> "光催化"
+                    TestMode.VIEW -> "测试"
                 }
             )
         },
@@ -53,19 +44,11 @@ fun PhotoEditTopBar(
             }
         },
         actions = {
-            if (mode == PhotocatalysisMode.EDIT) {
+            if (mode == TestMode.EDIT) {
                 TextButton(onClick = onLoadOther) { Text("导入已有实验") }
                 IconButton(onClick = onSave) { Icon(Icons.Default.Save, null) }
             } else {
                 IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null) }
-                if (!isFinished) {
-                    IconButton(onClick = onSetAlarm) { Icon(Icons.Default.Alarm, null) }
-                    IconButton(onClick = onToggleRun) {
-                        Icon(if (running) Icons.Default.Pause else Icons.Default.PlayArrow, null)
-                    }
-                } else {
-                    IconButton(onClick = onSetCompletedAt) { Icon(Icons.Default.AccessTime, null) }
-                }
                 IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, null) }
             }
         }

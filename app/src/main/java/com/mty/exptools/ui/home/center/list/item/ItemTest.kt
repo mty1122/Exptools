@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mty.exptools.R
 import com.mty.exptools.ui.theme.ExptoolsTheme
 import com.mty.exptools.util.MillisTime
@@ -81,7 +82,8 @@ fun ItemTest(
 
                     Text(
                         text = "${uiState.testInfo} | ${uiState.testDate}",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        lineHeight = 17.sp
                     )
                 }
 

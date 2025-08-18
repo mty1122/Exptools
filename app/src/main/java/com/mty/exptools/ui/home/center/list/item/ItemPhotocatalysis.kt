@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mty.exptools.R
 import com.mty.exptools.domain.photo.LightSource
 import com.mty.exptools.domain.photo.PhotoTargetMaterial
@@ -100,9 +101,13 @@ fun ItemPhotocatalysis(
                                 append("\n预计结束于 ${uiState.remainTime.stringValue} ")
                                 append(uiState.remainTime.unit.asString())
                                 append("后")
+                            } else if (uiState.performanceList.isNotEmpty()) {
+                                append("\n性能：")
+                                append(uiState.performanceList.joinToString(" "))
                             }
                         },
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        lineHeight = 17.sp
                     )
                 }
 

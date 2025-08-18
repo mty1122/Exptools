@@ -76,7 +76,7 @@ interface PhotoDao {
     suspend fun deleteDraftById(id: Long): Int
 
     @Transaction
-    @Query("SELECT * FROM photo_draft")
+    @Query("SELECT * FROM photo_draft ORDER BY id DESC")
     fun observeAllDraftWithSteps(): Flow<List<PhotoDraftWithSteps>>
 
     @Query("""

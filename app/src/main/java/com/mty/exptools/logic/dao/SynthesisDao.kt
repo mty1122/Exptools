@@ -96,7 +96,7 @@ interface SynthesisDao {
 
     // 用于列表读取
     @Transaction
-    @Query("SELECT * FROM synthesis_draft")
+    @Query("SELECT * FROM synthesis_draft ORDER BY id DESC")
     fun observeAllDraftWithSteps(): Flow<List<SynthesisDraftWithSteps>>
 
 }

@@ -11,7 +11,7 @@ interface OtherDao {
     @Query("SELECT * FROM other_draft WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): OtherDraftEntity?
 
-    @Query("SELECT * FROM other_draft")
+    @Query("SELECT * FROM other_draft ORDER BY id DESC")
     fun observeAll(): Flow<List<OtherDraftEntity>>
 
     // 写入

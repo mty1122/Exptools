@@ -11,7 +11,7 @@ interface TestDao {
     @Query("SELECT * FROM test_draft WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): TestDraftEntity?
 
-    @Query("SELECT * FROM test_draft")
+    @Query("SELECT * FROM test_draft ORDER BY id DESC")
     fun observeAll(): Flow<List<TestDraftEntity>>
 
     // 写入

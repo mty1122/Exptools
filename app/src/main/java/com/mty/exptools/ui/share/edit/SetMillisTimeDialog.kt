@@ -97,6 +97,7 @@ fun SetMillisTimeDialog(
                     selectedDate = nowAligned.toLocalDate()
                     tpState.hour = nowAligned.hour
                     tpState.minute = nowAligned.minute
+                    tpState.selection = TimePickerSelectionMode.Hour
                 }) { Text("现在") }
                 TextButton(onClick = onDismiss) { Text("取消") }
             }

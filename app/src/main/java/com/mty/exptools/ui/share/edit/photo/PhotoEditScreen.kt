@@ -18,8 +18,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.mty.exptools.domain.StepTimer
-import com.mty.exptools.domain.photo.LightSource
-import com.mty.exptools.domain.photo.PhotoTargetMaterial
 import com.mty.exptools.ui.SynthesisEditRoute
 import com.mty.exptools.ui.share.AlertDialogShared
 import com.mty.exptools.ui.share.edit.syn.BackConfirmDialog
@@ -89,8 +87,12 @@ fun PhotoEditScreen(
                 navController.navigate(SynthesisEditRoute(catalystName))
             },
             onAction = viewModel::onAction,
-            existingTargets = listOf(PhotoTargetMaterial.TC),
-            existingLights = listOf(LightSource.XENON_L.value, LightSource.XENON_R.value)
+            existingTargets = allPhotoDrafts
+                .distinctBy { it.target.name }
+                .map { it.target },
+            existingLights = allPhotoDrafts
+                .map { it.light.value }
+                .distinctBy { it }
         )
     }
 

@@ -49,7 +49,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.mty.exptools.domain.photo.ConcUnit
 import com.mty.exptools.domain.photo.LightSource
-import com.mty.exptools.domain.photo.PhotoTargetMaterial
 import com.mty.exptools.domain.photo.PhotocatalysisStep
 import com.mty.exptools.domain.photo.PhotocatalysisTarget
 import com.mty.exptools.domain.photo.calcPerformance
@@ -65,7 +64,7 @@ fun PhotoEditForm(
     tick: Int,
     onClickCatalystName: (String) -> Unit,
     onAction: (PhotoEditAction) -> Unit,
-    existingTargets: List<PhotoTargetMaterial> = emptyList(),  // 已有反应物/产物名称
+    existingTargets: List<PhotocatalysisTarget> = emptyList(),  // 已有反应物/产物名称
     existingLights: List<String> = emptyList()    // 已有光源文案（如“氙灯 420nm”）
 ) {
     val draft = ui.draft
@@ -319,7 +318,7 @@ private fun TargetCard(
     mode: PhotocatalysisMode,
     target: PhotocatalysisTarget,
     onAction: (PhotoEditAction) -> Unit,
-    suggestions: List<PhotoTargetMaterial>
+    suggestions: List<PhotocatalysisTarget>
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
@@ -340,7 +339,9 @@ private fun TargetCard(
                             onAction(PhotoEditAction.UpdateTargetName(newName))
                             val new = suggestions.firstOrNull { it.name == newName }
                             if (new != null) {
-                                onAction(PhotoEditAction.UpdateTargetWavelength(new.waveLength))
+                                onAction(PhotoEditAction.UpdateTargetWavelength(new.wavelengthNm))
+                                onAction(PhotoEditAction.UpdateStdCurveK(new.stdCurveK))
+                                onAction(PhotoEditAction.UpdateStdCurveB(new.stdCurveB))
                             }
                         }
                     )

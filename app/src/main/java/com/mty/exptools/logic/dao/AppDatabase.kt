@@ -8,13 +8,15 @@ import com.mty.exptools.logic.model.photo.PhotoDraftEntity
 import com.mty.exptools.logic.model.photo.PhotoStepEntity
 import com.mty.exptools.logic.model.syn.SynthesisDraftEntity
 import com.mty.exptools.logic.model.syn.SynthesisStepEntity
+import com.mty.exptools.logic.model.test.TestDraftEntity
 
 @Database(
     entities = [
         SynthesisDraftEntity::class,
         SynthesisStepEntity::class,
         PhotoDraftEntity::class,
-        PhotoStepEntity::class
+        PhotoStepEntity::class,
+        TestDraftEntity::class
     ],
     version = 1,
     exportSchema = true
@@ -23,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun synthesisDao(): SynthesisDao
     abstract fun photoDao(): PhotoDao
+    abstract fun testDao(): TestDao
 
     companion object {
 

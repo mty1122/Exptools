@@ -35,6 +35,12 @@ value class MillisTime(val millis: Long) {
         val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         return currentDateTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
     }
+
+    fun toDate(): String {
+        val currentDateTime = java.time.Instant.ofEpochMilli(millis)
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd")
+        return currentDateTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
+    }
 }
 
 fun Long.toMillisTime(): MillisTime = MillisTime(this)

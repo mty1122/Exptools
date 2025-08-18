@@ -80,8 +80,15 @@ fun ItemOther(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
+                    val text = buildString {
+                        if (uiState.info.isNotBlank()) {
+                            append(uiState.info)
+                            append(" | ")
+                        }
+                        append(uiState.endDate)
+                    }
                     Text(
-                        text = "${uiState.info} | ${uiState.endDate}",
+                        text = text,
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 17.sp
                     )

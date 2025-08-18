@@ -3,6 +3,7 @@ package com.mty.exptools.repository
 import com.mty.exptools.domain.photo.toDomain
 import com.mty.exptools.domain.syn.toDomain
 import com.mty.exptools.domain.test.toDomain
+import com.mty.exptools.domain.other.toDomain
 import com.mty.exptools.logic.dao.AppDatabase
 import com.mty.exptools.logic.dao.PhotoDao
 import kotlinx.coroutines.flow.map
@@ -12,6 +13,7 @@ class ListRepository @Inject constructor() {
     val synthesisDao = AppDatabase.get().synthesisDao()
     val photoDao: PhotoDao = AppDatabase.get().photoDao()
     val testDao = AppDatabase.get().testDao()
+    val otherDao = AppDatabase.get().otherDao()
 
     fun observeAllSynDraft() = synthesisDao.observeAllDraftWithSteps()
         .map {
@@ -22,6 +24,10 @@ class ListRepository @Inject constructor() {
             it.map { it.toDomain() }
         }
     fun observeAllTestDraft() = testDao.observeAll()
+        .map {
+            it.map { it.toDomain() }
+        }
+    fun observeAllOtherDraft() = otherDao.observeAll()
         .map {
             it.map { it.toDomain() }
         }

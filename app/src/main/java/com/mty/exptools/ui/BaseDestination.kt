@@ -15,3 +15,6 @@ data class PhotoEditRoute(val dbId: Long? = null) : EditRoute
 
 @Serializable
 data class TestEditRoute(val dbId: Long? = null) : EditRoute
+
+@Serializable
+data class OtherEditRoute(val dbId: Long? = null) : EditRoute

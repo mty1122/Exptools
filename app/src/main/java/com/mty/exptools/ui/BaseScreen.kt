@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mty.exptools.domain.StepTimer
 import com.mty.exptools.ui.home.HomeScreen
+import com.mty.exptools.ui.share.edit.other.OtherEditScreen
 import com.mty.exptools.ui.share.edit.photo.PhotoEditScreen
 import com.mty.exptools.ui.share.edit.syn.SynthesisEditScreen
 import com.mty.exptools.ui.share.edit.test.TestEditScreen
@@ -95,6 +96,25 @@ fun BaseScreen() {
             }
         ) {
             TestEditScreen(
+                navController = topNavController
+            )
+        }
+
+        composable<OtherEditRoute>(
+            enterTransition = {
+                slideInHorizontally(initialOffsetX = { fullWidth -> fullWidth })
+            },
+            exitTransition = {
+                slideOutHorizontally(targetOffsetX = { -it })
+            },
+            popEnterTransition = {
+                slideInHorizontally(initialOffsetX = { -it })
+            },
+            popExitTransition = {
+                slideOutHorizontally(targetOffsetX = { it })
+            }
+        ) {
+            OtherEditScreen(
                 navController = topNavController
             )
         }

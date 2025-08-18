@@ -94,9 +94,10 @@ fun ItemPhotocatalysis(
                     Text(
                         text = buildString {
                             append(uiState.target.name)
-                            if (uiState.target.waveLength != "")
+                            if (uiState.target.waveLength.isNotBlank())
                                 append(" | ${uiState.target.waveLength}nm")
-                            append(" | ${uiState.lightSource.value}")
+                            if (uiState.lightSource.value.isNotBlank())
+                                append(" | ${uiState.lightSource.value}")
                             if (uiState.status != ItemStatus.STATUS_COMPLETE) {
                                 append("\n预计结束于 ${uiState.remainTime.stringValue} ")
                                 append(uiState.remainTime.unit.asString())

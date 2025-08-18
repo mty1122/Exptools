@@ -3,6 +3,7 @@ package com.mty.exptools.ui.home.center.list
 import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mty.exptools.domain.other.OtherDraft
 import com.mty.exptools.domain.photo.PhotoTargetMaterial
 import com.mty.exptools.domain.photo.PhotocatalysisDraft
 import com.mty.exptools.domain.syn.SynthesisDraft
@@ -68,16 +69,19 @@ class ListViewModel @Inject constructor(
     private val photoDraftFlow = repo.observeAllPhotoDraft()
     // Test数据库流
     private val testDraftFlow = repo.observeAllTestDraft()
+    // Other数据库流
+    private val otherDraftFlow = repo.observeAllOtherDraft()
 
     // 任一触发（DB变化 / 定时 / 手动），都重算 UIState
     val itemUiStateList: StateFlow<List<ItemUiState>> =
-        combine(synDraftFlow, photoDraftFlow, testDraftFlow, refreshTrigger
-        ) { synDrafts, photoDrafts, testDrafts, _ ->
+        combine(synDraftFlow, photoDraftFlow, testDraftFlow, otherDraftFlow, refreshTrigger
+        ) { synDrafts, photoDrafts, testDrafts, otherDrafts, _ ->
             val synUiStates = synDrafts.map { it.toItemSynUiState() }
             val photoUiStates = photoDrafts.map { it.toItemPhotoUiState() }
             val testUiStates = testDrafts.map { it.toItemTestUiState() }
+            val otherUiStates = otherDrafts.map { it.toItemOtherUiState() }
 
-            val itemUiStates = synUiStates + photoUiStates + testUiStates
+            val itemUiStates = synUiStates + photoUiStates + testUiStates + otherUiStates
             itemUiStates.sortedBy { item ->
                 if (item.status == ItemStatus.STATUS_COMPLETE)
                     2 * System.currentTimeMillis() + item.rightTime.millis
@@ -207,6 +211,20 @@ class ListViewModel @Inject constructor(
             materialName = draft.materialName,
             testInfo = draft.summary,
             testDate = draft.startAt.toMillisTime().toDate(),
+            rightTime = time.absoluteValue.toMillisTime(),
+            status = if (time > 0) ItemStatus.STATUS_COMPLETE else ItemStatus.STATUS_START
+        )
+    }
+
+    private fun OtherDraft.toItemOtherUiState(): ItemOtherUiState {
+        val draft = this
+        val time = (System.currentTimeMillis() - draft.completedAt)
+        return ItemOtherUiState(
+            listItemId = 0,
+            dbId = draft.dbId,
+            title = draft.taskName,
+            info = draft.summary,
+            endDate = draft.completedAt.toMillisTime().toDate(),
             rightTime = time.absoluteValue.toMillisTime(),
             status = if (time > 0) ItemStatus.STATUS_COMPLETE else ItemStatus.STATUS_START
         )

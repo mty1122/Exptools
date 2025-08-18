@@ -98,7 +98,7 @@ fun ItemSynthesis(
                             }
                             else {
                                 append(uiState.targetStep)
-                                if (uiState.nextStep != "") {
+                                if (uiState.nextStep.isNotBlank()) {
                                     append("\n${uiState.nextStep}")
                                 }
                             }

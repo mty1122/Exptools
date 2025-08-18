@@ -80,8 +80,15 @@ fun ItemTest(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
+                    val text = buildString {
+                        if (uiState.testInfo.isNotBlank()) {
+                            append(uiState.testInfo)
+                            append(" | ")
+                        }
+                        append(uiState.testDate)
+                    }
                     Text(
-                        text = "${uiState.testInfo} | ${uiState.testDate}",
+                        text = text,
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 17.sp
                     )

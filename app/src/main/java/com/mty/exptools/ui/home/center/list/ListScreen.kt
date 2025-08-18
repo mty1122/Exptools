@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.mty.exptools.ui.OtherEditRoute
 import com.mty.exptools.ui.PhotoEditRoute
 import com.mty.exptools.ui.SynthesisEditRoute
 import com.mty.exptools.ui.TestEditRoute
@@ -98,7 +99,9 @@ fun ListScreen(
                     is ItemTestUiState -> ItemTest(uiState) {
                         topNavController.navigate(TestEditRoute(uiState.dbId))
                     }
-                    is ItemOtherUiState -> ItemOther(uiState)
+                    is ItemOtherUiState -> ItemOther(uiState) {
+                        topNavController.navigate(OtherEditRoute(uiState.dbId))
+                    }
                 }
             }
         }
@@ -117,7 +120,9 @@ fun ListScreen(
                     ItemType.TEST -> {
                         topNavController.navigate(TestEditRoute())
                     }
-                    ItemType.OTHER -> {}
+                    ItemType.OTHER -> {
+                        topNavController.navigate(OtherEditRoute())
+                    }
                 }
             },
             modifier = Modifier

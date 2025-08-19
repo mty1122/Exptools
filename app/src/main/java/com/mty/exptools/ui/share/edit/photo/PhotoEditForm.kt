@@ -565,7 +565,7 @@ private fun StepCardPhoto(
                         }
                     }
                     val line2 = when {
-                        perf != null -> "性能：${"%.1f".format((perf * 100).coerceIn(0.0, 100.0))}%"
+                        perf != null -> "性能：${"%.2f".format((perf * 100).coerceIn(0.0, 100.0))}%"
                         else -> {
                             val unit = if (step.concUnit == ConcUnit.ABSORBANCE_A) "A" else "mg/L"
                             "浓度：${step.concValueText.ifBlank { "—" }} $unit"

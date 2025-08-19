@@ -1,8 +1,7 @@
 package com.mty.exptools.ui.home
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -16,6 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -37,7 +39,16 @@ fun HomeScreen(
     var navCount by remember { mutableIntStateOf(0) }
     var isList by remember { mutableStateOf(true) }
 
+    var backgroundBlur by rememberSaveable { mutableStateOf(false) }
+    fun setBackgroundBlur(blur: Boolean) { backgroundBlur = blur }
+    val blur by animateDpAsState(
+        targetValue = if (backgroundBlur) 12.dp else 0.dp,
+        animationSpec = tween(200),
+        label = "list-blur"
+    )
+
     Scaffold(
+        modifier = Modifier.blur(blur),
         topBar = {
             HomeTopBar(
                 title = "ExpTools",
@@ -52,7 +63,13 @@ fun HomeScreen(
                     if (targetRoute != currentRoute) {
                         isList = targetRoute == HomeDestination.List.route
                         currentRoute = targetRoute
-                        navController.navigate(targetRoute)
+                        navController.navigate(targetRoute) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                        }
                         navCount++ // 跳转至其他页面时导航次数+1
                     }
                 }
@@ -78,9 +95,24 @@ fun HomeScreen(
                         targetOffsetX = { -it }
                     )
                 },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None }
-            ) { ListScreen(navCount = navCount, topNavController = topNavController) }
+                popEnterTransition = {
+                    slideInHorizontally(
+                        animationSpec = tween(260, easing = FastOutSlowInEasing),
+                        initialOffsetX = { -it }
+                    )
+                },
+                popExitTransition = {
+                    slideOutHorizontally(
+                        animationSpec = tween(260, easing = FastOutSlowInEasing),
+                        targetOffsetX = { -it }
+                    )
+                }
+            ) {
+                ListScreen(
+                    navCount = navCount,
+                    topNavController = topNavController
+                )
+            }
             composable(
                 route = HomeDestination.More.route,
                 enterTransition = {
@@ -95,9 +127,19 @@ fun HomeScreen(
                         targetOffsetX = { it }
                     )
                 },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None }
-            ) { MoreScreen() }
+                popEnterTransition = {
+                    slideInHorizontally(
+                        animationSpec = tween(260, easing = FastOutSlowInEasing),
+                        initialOffsetX = { it }
+                    )
+                },
+                popExitTransition = {
+                    slideOutHorizontally(
+                        animationSpec = tween(260, easing = FastOutSlowInEasing),
+                        targetOffsetX = { it }
+                    )
+                }
+            ) { MoreScreen(::setBackgroundBlur) }
         }
     }
 

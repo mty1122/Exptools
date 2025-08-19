@@ -9,6 +9,7 @@ import com.mty.exptools.domain.photo.PhotocatalysisDraft
 import com.mty.exptools.domain.syn.SynthesisDraft
 import com.mty.exptools.domain.test.TestDraft
 import com.mty.exptools.repository.ListRepository
+import com.mty.exptools.repository.TickRepository
 import com.mty.exptools.ui.home.center.list.item.ItemOtherUiState
 import com.mty.exptools.ui.home.center.list.item.ItemPhotoUiState
 import com.mty.exptools.ui.home.center.list.item.ItemStatus
@@ -18,7 +19,6 @@ import com.mty.exptools.ui.home.center.list.item.ItemUiState
 import com.mty.exptools.util.MillisTime
 import com.mty.exptools.util.toMillisTime
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,11 +29,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
@@ -41,7 +39,8 @@ import kotlin.math.absoluteValue
 
 @HiltViewModel
 class ListViewModel @Inject constructor(
-    repo: ListRepository
+    repo: ListRepository,
+    tickRepo: TickRepository
 ) : ViewModel() {
 
     private val _refreshing = MutableStateFlow(false)
@@ -49,12 +48,7 @@ class ListViewModel @Inject constructor(
 
 
     // 每10秒钟触发一次的节拍
-    private val tickFlow: Flow<Unit> = flow {
-        while (currentCoroutineContext().isActive) {
-            emit(Unit)
-            delay(10_000)
-        }
-    }
+    private val tickFlow = tickRepo.autoRefreshTicker
     // 手动刷新触发器（支持背压丢弃：最新的一次即可）
     private val manualRefresh = MutableSharedFlow<Unit>(
         replay = 0, extraBufferCapacity = 1

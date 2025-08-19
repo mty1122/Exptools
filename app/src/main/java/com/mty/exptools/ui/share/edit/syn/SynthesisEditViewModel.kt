@@ -8,14 +8,16 @@ import androidx.navigation.toRoute
 import com.mty.exptools.domain.syn.SynthesisDraft
 import com.mty.exptools.domain.syn.SynthesisStep
 import com.mty.exptools.repository.SynthesisRepository
+import com.mty.exptools.repository.TickRepository
 import com.mty.exptools.ui.SynthesisEditRoute
 import com.mty.exptools.util.toast
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -25,6 +27,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SynthesisEditViewModel @Inject constructor(
     private val repo: SynthesisRepository,
+    repoTick: TickRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -35,6 +38,7 @@ class SynthesisEditViewModel @Inject constructor(
     private val materialNameArg: String? =
         savedStateHandle.toRoute<SynthesisEditRoute>().materialName
 
+    private val tickFlow = repoTick.autoRefreshTicker
     private val _tick = MutableStateFlow(0)
     val tick: StateFlow<Int> = _tick.asStateFlow()
 
@@ -72,26 +76,27 @@ class SynthesisEditViewModel @Inject constructor(
         }
         // 每过10秒刷新浏览模式的剩余时间和状态
         viewModelScope.launch {
-            while (isActive) {
-                delay(10_000)
-                val state = _uiState.value
-                if (state.mode == SynthesisMode.VIEW && state.running) {
-                    _tick.update { it + 1 }
-                    // 如果已经完成，则跳转至下一步或者完成所有步骤（数据结构设计之初就考虑了这种情况，只需更新UI即可）
-                    if (state.draft.steps[state.currentStepIndex].timer.isFinished())
-                        _uiState.update {
-                            val currentIndex = it.currentStepIndex
-                            val hasNext = currentIndex < it.draft.steps.lastIndex
-                            it.copy(
-                                draft = it.draft.copy(
-                                    completedAt = if (hasNext) null else it.draft.completedAt
-                                ),
-                                running = false,
-                                currentStepIndex = if (hasNext) currentIndex + 1 else currentIndex
-                            )
-                        }
+            tickFlow.onEach {
+                if (isActive) {
+                    val state = _uiState.value
+                    if (state.mode == SynthesisMode.VIEW && state.running) {
+                        _tick.update { it + 1 }
+                        // 如果已经完成，则跳转至下一步或者完成所有步骤（数据结构设计之初就考虑了这种情况，只需更新UI即可）
+                        if (state.draft.steps[state.currentStepIndex].timer.isFinished())
+                            _uiState.update {
+                                val currentIndex = it.currentStepIndex
+                                val hasNext = currentIndex < it.draft.steps.lastIndex
+                                it.copy(
+                                    draft = it.draft.copy(
+                                        completedAt = if (hasNext) null else it.draft.completedAt
+                                    ),
+                                    running = false,
+                                    currentStepIndex = if (hasNext) currentIndex + 1 else currentIndex
+                                )
+                            }
+                    }
                 }
-            }
+            }.launchIn(this)
         }
     }
 

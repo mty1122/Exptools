@@ -40,7 +40,7 @@ data class PhotocatalysisDraft(
                 bText = target.stdCurveB
             )
             val perf = calcPerformance(c0, ci)
-            if (perf != null) "${"%.1f".format((perf * 100).coerceIn(0.0, 100.0))}%"
+            if (perf != null) "${"%.2f".format((perf * 100).coerceIn(0.0, 100.0))}%"
             else return emptyList()
         }
         return perfList

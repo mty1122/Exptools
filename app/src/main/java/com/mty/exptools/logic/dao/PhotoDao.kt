@@ -86,4 +86,8 @@ interface PhotoDao {
     """)
     suspend fun completeStepsByIndex(draftId: Long, orderIndexes: List<Int>): Int
 
+    @Transaction
+    @Query("SELECT * FROM photo_draft WHERE completed_at BETWEEN :start AND :end")
+    suspend fun getDraftsByTimeRange(start: Long, end: Long): List<PhotoDraftWithSteps>
+
 }

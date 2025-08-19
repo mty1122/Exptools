@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -44,14 +45,15 @@ import com.mty.exptools.ui.home.center.list.item.ItemTestUiState
 @Composable
 fun ListScreen(
     navCount: Int,
-    topNavController: NavController
+    topNavController: NavController,
+    viewModel: ListViewModel = hiltViewModel()
 ) {
-    val viewModel: ListViewModel = hiltViewModel()
     val itemUiStateList by viewModel.itemUiStateList.collectAsStateWithLifecycle()
 
     val refreshState = rememberPullToRefreshState()
     val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
 
+    val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
     var expanded by rememberSaveable { mutableStateOf(false) } // ← hoist 展开状态
     val blur by animateDpAsState(
         targetValue = if (expanded) 12.dp else 0.dp, // 背景模糊半径
@@ -86,7 +88,8 @@ fun ListScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .blur(blur),
             contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            state = listState
         ) {
             items(itemUiStateList, key = { it.listItemId }) { uiState ->
                 when (uiState) {

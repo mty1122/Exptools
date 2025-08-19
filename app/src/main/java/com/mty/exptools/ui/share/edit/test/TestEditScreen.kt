@@ -64,7 +64,7 @@ fun TestEditScreen(
         TestEditForm(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner),
+                .padding(top = inner.calculateTopPadding()), // 列表内容向下延申
             ui = uiState,
             onClickMaterialName = { name ->
                 navController.navigate(SynthesisEditRoute(name))

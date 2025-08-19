@@ -182,6 +182,10 @@ fun PhotoEditForm(
                 )
             }
         }
+
+        item {
+            Spacer(Modifier.height(10.dp)) // 最后一项抬高
+        }
     }
 }
 

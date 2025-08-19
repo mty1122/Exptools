@@ -75,7 +75,7 @@ fun SynthesisEditScreen(
         SynthesisEditForm(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner),
+                .padding(top = inner.calculateTopPadding()), // 列表内容向下延申
             mode = uiState.mode,
             draft = uiState.draft,
             nameEditable = uiState.nameEditable,

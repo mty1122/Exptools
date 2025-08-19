@@ -61,7 +61,7 @@ fun OtherEditScreen(
         OtherEditForm(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner),
+                .padding(top = inner.calculateTopPadding()), // 列表内容向下延申
             ui = uiState,
             onAction = viewModel::onAction,
         )

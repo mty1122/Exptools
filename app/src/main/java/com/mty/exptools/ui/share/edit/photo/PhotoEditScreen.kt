@@ -80,7 +80,7 @@ fun PhotoEditScreen(
         PhotoEditForm(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner),
+                .padding(top = inner.calculateTopPadding()), // 列表内容向下延申
             ui = uiState,
             tick = tick,
             onClickCatalystName = { catalystName ->

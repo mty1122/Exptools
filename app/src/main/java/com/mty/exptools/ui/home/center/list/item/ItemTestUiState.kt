@@ -5,9 +5,8 @@ import com.mty.exptools.util.MillisTime
 data class ItemTestUiState(
     override val listItemId: Int,
     val dbId: Long = 0L,
-    val materialName: String,
-    val testInfo: String,
-    val testDate: String,
+    override val title: String,
+    override val info: String = "",
     override val rightTime: MillisTime,
     override val status: ItemStatus
 ): ItemUiState

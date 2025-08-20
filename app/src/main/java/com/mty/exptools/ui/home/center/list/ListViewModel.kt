@@ -4,7 +4,6 @@ import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mty.exptools.domain.other.OtherDraft
-import com.mty.exptools.domain.photo.PhotoTargetMaterial
 import com.mty.exptools.domain.photo.PhotocatalysisDraft
 import com.mty.exptools.domain.syn.SynthesisDraft
 import com.mty.exptools.domain.test.TestDraft
@@ -17,6 +16,7 @@ import com.mty.exptools.ui.home.center.list.item.ItemSynUiState
 import com.mty.exptools.ui.home.center.list.item.ItemTestUiState
 import com.mty.exptools.ui.home.center.list.item.ItemUiState
 import com.mty.exptools.util.MillisTime
+import com.mty.exptools.util.asString
 import com.mty.exptools.util.toMillisTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -140,20 +140,33 @@ class ListViewModel @Inject constructor(
         val currentProgress = draft.steps[draft.currentStepIndex].timer.progress()
         val progress = draft.currentStepIndex / draft.steps.size.toFloat() +
                 1f / draft.steps.size * currentProgress
+        val status = when {
+            draft.isFinished -> ItemStatus.STATUS_COMPLETE
+            draft.steps.getOrNull(draft.currentStepIndex)?.timer
+                ?.isRunning() == false -> ItemStatus.STATUS_PAUSE
+            else -> ItemStatus.STATUS_START
+        }
+        val info = buildString {
+            if (status == ItemStatus.STATUS_COMPLETE) {
+                append(draft.conditionSummary)
+            }
+            else {
+                val targetStep = draft.steps[draft.currentStepIndex].content
+                val nextStep = draft.steps.getOrNull(draft.currentStepIndex + 1)?.content ?: ""
+                append(targetStep)
+                if (nextStep.isNotBlank()) {
+                    append("\n${nextStep}")
+                }
+            }
+        }
         return ItemSynUiState(
             listItemId = 0, // 交由上级统一排序
             materialName = draft.materialName,
-            targetStep = draft.steps[draft.currentStepIndex].content,
-            nextStep = draft.steps.getOrNull(draft.currentStepIndex + 1)?.content ?: "",
+            title = draft.materialName,
+            info = info,
             progress = progress,
-            completeInfo = draft.conditionSummary,
             rightTime = time,
-            status = when {
-                draft.isFinished -> ItemStatus.STATUS_COMPLETE
-                draft.steps.getOrNull(draft.currentStepIndex)?.timer
-                    ?.isRunning() == false -> ItemStatus.STATUS_PAUSE
-                else -> ItemStatus.STATUS_START
-            }
+            status = status
         )
     }
 
@@ -176,16 +189,37 @@ class ListViewModel @Inject constructor(
         // 剩余时间
         var remaining = 0L
         steps.forEach { remaining += it.timer.remaining() }
+        val remainTime = remaining.toMillisTime().toTime()
+
+        val status = when {
+            draft.isFinished -> ItemStatus.STATUS_COMPLETE
+            draft.steps.getOrNull(draft.currentStepIndex)?.timer
+                ?.isRunning() == false -> ItemStatus.STATUS_PAUSE
+            else -> ItemStatus.STATUS_START
+        }
+
+        val info = buildString {
+            append(draft.target.name)
+            if (draft.target.wavelengthNm.isNotBlank())
+                append(" | ${draft.target.wavelengthNm}nm")
+            if (draft.light.value.isNotBlank())
+                append(" | ${draft.light.value}")
+            if (status != ItemStatus.STATUS_COMPLETE) {
+                append("\n预计结束于 ${remainTime.stringValue} ")
+                append(remainTime.unit.asString())
+                append("后")
+            } else if (draft.performanceList.isNotEmpty()) {
+                append("\n性能 ")
+                append(draft.performanceList.joinToString(" "))
+            }
+        }
 
         return ItemPhotoUiState(
             listItemId = 0, // 交由上级统一排序
             dbId = draft.dbId,
-            materialName = draft.catalystName,
-            target = PhotoTargetMaterial(draft.target.name, draft.target.wavelengthNm),
-            performanceList = draft.performanceList,
+            title = draft.catalystName,
+            info = info,
             progress = progress,
-            lightSource = draft.light,
-            remainTime = remaining.toMillisTime().toTime(),
             rightTime = time,
             status = when {
                 draft.isFinished -> ItemStatus.STATUS_COMPLETE
@@ -199,12 +233,18 @@ class ListViewModel @Inject constructor(
     private fun TestDraft.toItemTestUiState(): ItemTestUiState {
         val draft = this
         val time = (System.currentTimeMillis() - draft.startAt)
+        val info = buildString {
+            if (draft.summary.isNotBlank()) {
+                append(draft.summary)
+                append(" | ")
+            }
+            append(draft.startAt.toMillisTime().toDate())
+        }
         return ItemTestUiState(
             listItemId = 0,
             dbId = draft.dbId,
-            materialName = draft.materialName,
-            testInfo = draft.summary,
-            testDate = draft.startAt.toMillisTime().toDate(),
+            title = draft.materialName,
+            info = info,
             rightTime = time.absoluteValue.toMillisTime(),
             status = if (time > 0) ItemStatus.STATUS_COMPLETE else ItemStatus.STATUS_START
         )
@@ -213,12 +253,18 @@ class ListViewModel @Inject constructor(
     private fun OtherDraft.toItemOtherUiState(): ItemOtherUiState {
         val draft = this
         val time = (System.currentTimeMillis() - draft.completedAt)
+        val info = buildString {
+            if (draft.summary.isNotBlank()) {
+                append(draft.summary)
+                append(" | ")
+            }
+            append(draft.completedAt.toMillisTime().toDate())
+        }
         return ItemOtherUiState(
             listItemId = 0,
             dbId = draft.dbId,
             title = draft.taskName,
-            info = draft.summary,
-            endDate = draft.completedAt.toMillisTime().toDate(),
+            info = info,
             rightTime = time.absoluteValue.toMillisTime(),
             status = if (time > 0) ItemStatus.STATUS_COMPLETE else ItemStatus.STATUS_START
         )

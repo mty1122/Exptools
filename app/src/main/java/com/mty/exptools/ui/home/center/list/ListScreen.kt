@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,10 +46,15 @@ import com.mty.exptools.ui.home.center.list.item.ItemTestUiState
 @Composable
 fun ListScreen(
     navCount: Int,
+    query: String,
     topNavController: NavController,
     viewModel: ListViewModel = hiltViewModel()
 ) {
     val itemUiStateList by viewModel.itemUiStateList.collectAsStateWithLifecycle()
+    val filteredUiStateList = remember(itemUiStateList, query) {
+        val q = query.trim().lowercase()
+        if (q.isEmpty()) itemUiStateList else itemUiStateList.filter { it.matchesQuery(q) }
+    }
 
     val refreshState = rememberPullToRefreshState()
     val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
@@ -91,7 +97,7 @@ fun ListScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             state = listState
         ) {
-            items(itemUiStateList, key = { it.listItemId }) { uiState ->
+            items(filteredUiStateList, key = { it.listItemId }) { uiState ->
                 when (uiState) {
                     is ItemPhotoUiState -> ItemPhotocatalysis(uiState) {
                         topNavController.navigate(PhotoEditRoute(uiState.dbId))

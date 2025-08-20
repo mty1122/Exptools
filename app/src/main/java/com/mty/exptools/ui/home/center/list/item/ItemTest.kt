@@ -67,7 +67,7 @@ fun ItemTest(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = uiState.materialName,
+                            text = uiState.title,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
                         )
@@ -80,15 +80,8 @@ fun ItemTest(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    val text = buildString {
-                        if (uiState.testInfo.isNotBlank()) {
-                            append(uiState.testInfo)
-                            append(" | ")
-                        }
-                        append(uiState.testDate)
-                    }
                     Text(
-                        text = text,
+                        text = uiState.info,
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 17.sp
                     )
@@ -118,9 +111,8 @@ fun ItemItemTestPreview() {
     ExptoolsTheme {
         val uiState = ItemTestUiState(
             listItemId = 1,
-            materialName = "钨酸铋-实验2-22",
-            testInfo = "XPS",
-            testDate = "2025.03.22",
+            title = "钨酸铋-实验2-22",
+            info = "XPS | 2025.03.22",
             rightTime = MillisTime(864_000_000),
             status = ItemStatus.STATUS_COMPLETE
         )

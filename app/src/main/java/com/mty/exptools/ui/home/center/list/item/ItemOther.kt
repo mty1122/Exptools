@@ -80,15 +80,8 @@ fun ItemOther(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    val text = buildString {
-                        if (uiState.info.isNotBlank()) {
-                            append(uiState.info)
-                            append(" | ")
-                        }
-                        append(uiState.endDate)
-                    }
                     Text(
-                        text = text,
+                        text = uiState.info,
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 17.sp
                     )
@@ -119,8 +112,7 @@ fun ItemItemOtherPreview() {
         val uiState = ItemOtherUiState(
             listItemId = 1,
             title = "某文章撰写",
-            info = "引言部分",
-            endDate = "2025.03.12",
+            info = "引言部分 | 2025.03.12",
             rightTime = MillisTime(1_728_000_000),
             status = ItemStatus.STATUS_COMPLETE
         )

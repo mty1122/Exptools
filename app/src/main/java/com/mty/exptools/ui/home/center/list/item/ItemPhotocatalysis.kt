@@ -78,7 +78,7 @@ fun ItemPhotocatalysis(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = uiState.materialName,
+                            text = uiState.title,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
                         )
@@ -92,21 +92,7 @@ fun ItemPhotocatalysis(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = buildString {
-                            append(uiState.target.name)
-                            if (uiState.target.waveLength.isNotBlank())
-                                append(" | ${uiState.target.waveLength}nm")
-                            if (uiState.lightSource.value.isNotBlank())
-                                append(" | ${uiState.lightSource.value}")
-                            if (uiState.status != ItemStatus.STATUS_COMPLETE) {
-                                append("\n预计结束于 ${uiState.remainTime.stringValue} ")
-                                append(uiState.remainTime.unit.asString())
-                                append("后")
-                            } else if (uiState.performanceList.isNotEmpty()) {
-                                append("\n性能 ")
-                                append(uiState.performanceList.joinToString(" "))
-                            }
-                        },
+                        text = uiState.info,
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 17.sp
                     )
@@ -154,10 +140,13 @@ fun ItemPhotocatalysisPreview() {
     ExptoolsTheme {
         val uiState = ItemPhotoUiState(
             listItemId = 1,
-            materialName = "钨酸铋-实验2-22",
-            target = PhotoTargetMaterial.TC,
-            lightSource = LightSource.XENON_L,
-            remainTime = MillisTime(1_800_000).toTime(),
+            title = "钨酸铋-实验2-22",
+            info = buildString {
+                append(PhotoTargetMaterial.TC.name)
+                append(" | ${PhotoTargetMaterial.TC.waveLength}nm | ")
+                append(LightSource.XENON_L.value)
+                append("\n预计结束于 30 分钟后")
+            },
             progress = 0.75f,
             rightTime = MillisTime(1_800_000),
             status = ItemStatus.STATUS_START

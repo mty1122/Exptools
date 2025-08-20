@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -21,7 +22,9 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.mty.exptools.ui.HomeRoute
 import com.mty.exptools.ui.home.bottom.HomeBottomBar
 import com.mty.exptools.ui.home.center.list.ListScreen
 import com.mty.exptools.ui.home.center.more.MoreScreen
@@ -37,7 +40,6 @@ fun HomeScreen(
 
     // 记录导航次数
     var navCount by remember { mutableIntStateOf(0) }
-    var isList by remember { mutableStateOf(true) }
 
     var backgroundBlur by rememberSaveable { mutableStateOf(false) }
     fun setBackgroundBlur(blur: Boolean) { backgroundBlur = blur }
@@ -47,13 +49,29 @@ fun HomeScreen(
         label = "list-blur"
     )
 
+    // TopBar搜索功能
+    var searchExpanded by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
+
+    // 切换页面关闭搜索栏
+    val topBackStack by topNavController.currentBackStackEntryAsState()
+    val isOnHome = topBackStack?.destination?.route == HomeRoute::class.qualifiedName
+    LaunchedEffect(isOnHome) {
+        if (!isOnHome) {
+            searchExpanded = false
+            query = ""
+        }
+    }
+
     Scaffold(
         modifier = Modifier.blur(blur),
         topBar = {
             HomeTopBar(
-                title = "ExpTools",
-                isList = isList,
-                onSearchButtonClick = { navCount++ } // 单击搜索按钮时导航次数+1
+                showSearchIcon = currentRoute == HomeDestination.List.route,
+                searchExpanded = searchExpanded,
+                query = query,
+                onExpandChange = { searchExpanded = it },
+                onQueryChange = { query = it }
             )
         },
         bottomBar = {
@@ -61,7 +79,10 @@ fun HomeScreen(
                 currentRoute = currentRoute,
                 onItemClick = { targetRoute->
                     if (targetRoute != currentRoute) {
-                        isList = targetRoute == HomeDestination.List.route
+                        if (targetRoute != HomeDestination.List.route) { // 切换页面关闭搜索栏
+                            searchExpanded = false
+                            query = ""
+                        }
                         currentRoute = targetRoute
                         navController.navigate(targetRoute) {
                             launchSingleTop = true
@@ -110,6 +131,7 @@ fun HomeScreen(
             ) {
                 ListScreen(
                     navCount = navCount,
+                    query = query,
                     topNavController = topNavController
                 )
             }

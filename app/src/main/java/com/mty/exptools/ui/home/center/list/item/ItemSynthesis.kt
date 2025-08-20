@@ -75,7 +75,7 @@ fun ItemSynthesis(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = uiState.materialName,
+                            text = uiState.title,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
                         )
@@ -92,17 +92,7 @@ fun ItemSynthesis(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = buildString {
-                            if (uiState.status == ItemStatus.STATUS_COMPLETE) {
-                                append(uiState.completeInfo)
-                            }
-                            else {
-                                append(uiState.targetStep)
-                                if (uiState.nextStep.isNotBlank()) {
-                                    append("\n${uiState.nextStep}")
-                                }
-                            }
-                        },
+                        text = uiState.info,
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 17.sp
                     )
@@ -151,8 +141,8 @@ fun ItemItemSynthesisPreview() {
         val uiState = ItemSynUiState(
             listItemId = 1,
             materialName = "钨酸铋-实验2-22",
-            targetStep = "120℃ 14h 水热反应 | 1号釜 小烘箱",
-            nextStep = "60℃ 干燥 12小时",
+            title = "钨酸铋-实验2-22",
+            info = "120℃ 14h 水热反应 | 1号釜 小烘箱\n60℃ 干燥 12小时",
             progress = 0.6f,
             rightTime = MillisTime(1_728_000_000),
             status = ItemStatus.STATUS_START

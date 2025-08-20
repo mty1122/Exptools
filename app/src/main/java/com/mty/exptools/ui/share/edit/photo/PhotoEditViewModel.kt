@@ -526,7 +526,12 @@ class PhotoEditViewModel @Inject constructor(
             val newDraft = selected.copy(
                 dbId = 0L,
                 completedAt = null,
-                steps = selected.steps.map { it.copy(timer = it.timer.reset()) }
+                steps = selected.steps.map {
+                    it.copy(
+                        concValueText = "", // 重置步骤浓度
+                        timer = it.timer.reset() // 重置步骤完成进度
+                    )
+                }
             )
             state.copy(draft = newDraft)
         }

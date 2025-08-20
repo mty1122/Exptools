@@ -103,7 +103,7 @@ fun ItemPhotocatalysis(
                                 append(uiState.remainTime.unit.asString())
                                 append("后")
                             } else if (uiState.performanceList.isNotEmpty()) {
-                                append("\n性能：")
+                                append("\n性能 ")
                                 append(uiState.performanceList.joinToString(" "))
                             }
                         },

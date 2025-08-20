@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -87,7 +88,7 @@ fun AddItemSpeedDial(
                     onExpandedChange(false)
                     onAdd(ItemType.SYNTHESIS)
                 },
-                index = 0
+                index = 3
             )
             SpeedItem(
                 visible = expanded,
@@ -98,7 +99,7 @@ fun AddItemSpeedDial(
                     onExpandedChange(false)
                     onAdd(ItemType.PHOTOCATALYSIS)
                 },
-                index = 1
+                index = 2
             )
             SpeedItem(
                 visible = expanded,
@@ -109,7 +110,7 @@ fun AddItemSpeedDial(
                     onExpandedChange(false)
                     onAdd(ItemType.TEST)
                 },
-                index = 2
+                index = 1
             )
             SpeedItem(
                 visible = expanded,
@@ -120,7 +121,7 @@ fun AddItemSpeedDial(
                     onExpandedChange(false)
                     onAdd(ItemType.OTHER)
                 },
-                index = 3
+                index = 0
             )
 
             // FAB 旋转不变
@@ -154,7 +155,8 @@ private fun SpeedItem(
     label: String,
     color: Color,
     onClick: () -> Unit,
-    index: Int
+    index: Int,
+    total: Int = 4
 ) {
     val delayPerItem = 50
     // 微缩放：展开时从 0.92 → 1.0
@@ -164,13 +166,18 @@ private fun SpeedItem(
         animationSpec = tween(durationMillis = 160, delayMillis = index * delayPerItem),
         label = "pill-scale"
     )
+    val exitDelay = (total - 1 - index) * delayPerItem
 
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(
             initialOffsetY = { it / 3 },
             animationSpec = tween(180, delayMillis = index * delayPerItem)
-        ) + fadeIn(animationSpec = tween(180, delayMillis = index * delayPerItem))
+        ) + fadeIn(animationSpec = tween(180, delayMillis = index * delayPerItem)),
+        exit = slideOutVertically(                // ← 新增：收回时向下滑出一点
+            targetOffsetY = { it / 3 },
+            animationSpec = tween(durationMillis = 150, delayMillis = exitDelay)
+        ) + fadeOut(animationSpec = tween(150, delayMillis = exitDelay))
     ) {
         Surface(
             onClick = onClick,

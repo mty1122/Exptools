@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -80,7 +81,8 @@ fun PhotoEditScreen(
         PhotoEditForm(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = inner.calculateTopPadding()), // 列表内容向下延申
+                .padding(top = inner.calculateTopPadding()) // 列表内容向下延申
+                .imePadding(),
             ui = uiState,
             tick = tick,
             onClickCatalystName = { catalystName ->

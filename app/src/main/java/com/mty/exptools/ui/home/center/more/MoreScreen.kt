@@ -4,7 +4,11 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,10 +21,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,10 +33,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,7 +48,6 @@ import com.mty.exptools.ExptoolsApp
 import com.mty.exptools.util.toast
 import java.time.Instant
 import java.time.ZoneId
-import androidx.core.net.toUri
 
 @Composable
 fun MoreScreen(
@@ -123,29 +131,93 @@ private fun AutoRefreshCard(
     val options = listOf(5, 10, 15, 30, 60)
 
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Text("自动刷新间隔", style = MaterialTheme.typography.titleMedium)
-            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-                OutlinedTextField(
-                    value = "$current 秒",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("选择间隔") },
-                    modifier = Modifier
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                        .fillMaxWidth()
-                )
-                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    options.forEach { s ->
-                        DropdownMenuItem(
-                            text = { Text("$s 秒") },
-                            onClick = {
-                                onPick(s)
-                                expanded = false
-                            }
-                        )
-                    }
+            // 用自定义的 OutlinedDropdownField 替换原来的 OutlinedTextField 菜单
+            // 解决了焦点问题
+            OutlinedDropdownField(
+                value = "$current 秒",
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+                options = options.map { "$it 秒" },
+                onPick = { picked ->
+                    picked.removeSuffix(" 秒").toIntOrNull()?.let(onPick)
                 }
+            )
+        }
+    }
+}
+
+/** 非输入框版本的 Outlined “选择器”，外观接近 OutlinedTextField（带浮动小标题） */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OutlinedDropdownField(
+    value: String,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    options: List<String>,
+    onPick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    shape: Shape = MaterialTheme.shapes.small,
+    normalBorderColor: Color = MaterialTheme.colorScheme.outline,
+    focusedBorderColor: Color = MaterialTheme.colorScheme.primary
+) {
+    // 展开时的边框颜色平滑过渡
+    val borderColor by animateColorAsState(
+        targetValue = if (expanded) focusedBorderColor else normalBorderColor,
+        label = "outlined-dropdown-border"
+    )
+    val borderWidth by animateDpAsState(
+        if (expanded) 2.dp else 1.dp,
+        label = "borderWidth"
+    )
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { onExpandedChange(!expanded) },
+        modifier = modifier
+    ) {
+        // 锚点：不要 clickable；交给 ExposedDropdownMenuBox 处理
+        Box(
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth()
+        ) {
+            Surface(
+                shape = shape,                    // 和 Card 一致
+                tonalElevation = 0.dp,
+                border = BorderStroke(borderWidth, borderColor),
+                color = Color.Transparent,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 1.dp)
+                    )
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                }
+            }
+        }
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onPick(option)
+                        onExpandedChange(false)
+                    }
+                )
             }
         }
     }

@@ -55,11 +55,16 @@ class MoreViewModel @Inject constructor(
     }
 
     // ------- 导出入口 -------
+    @OptIn(ExperimentalSerializationApi::class)
     fun exportAll() = viewModelScope.launch {
-        //val data = repo.getAllOnce()
-        //val json = json.encodeToString(data)
-        //saveToFile("Exptools_All_${stamp()}.json", json)
-        toast("该功能正在开发中，敬请期待！")
+        _uiState.update { it.copy(exportingAll = true) }
+        val data = repo.getAllOnce()
+        saveToFile("Exptools_All_${stamp()}.json") { os ->
+            os.buffered().use {
+                json.encodeToStream(data, it)
+            }
+        }
+        _uiState.update { it.copy(exportingAll = false) }
     }
 
     @OptIn(ExperimentalSerializationApi::class)

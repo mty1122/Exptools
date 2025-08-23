@@ -1,7 +1,9 @@
 package com.mty.exptools.logic.model.photo
 
 import androidx.room.*
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(
     tableName = "photo_step",
     foreignKeys = [

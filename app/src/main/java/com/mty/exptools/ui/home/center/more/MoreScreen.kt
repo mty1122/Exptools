@@ -261,7 +261,7 @@ private fun ExportAllCard(
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("导出数据库（全部）", style = MaterialTheme.typography.titleMedium)
-            Text("导出全部数据为 JSON 文件。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("导出全部数据为 JSON 文件", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Button(
                 onClick = onExportAll,
                 enabled = !exporting

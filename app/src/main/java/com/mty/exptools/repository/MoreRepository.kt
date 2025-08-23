@@ -6,15 +6,19 @@ import com.mty.exptools.logic.dao.AppDatabase
 import com.mty.exptools.logic.dao.PhotoDao
 import com.mty.exptools.logic.dao.PreferenceDao
 import com.mty.exptools.logic.dao.SynthesisDao
+import com.mty.exptools.logic.export.model.DatabaseExport
 import com.mty.exptools.logic.export.model.PhotoDraftWithSynthesis
 import com.mty.exptools.logic.export.model.toExport
 import com.mty.exptools.logic.model.syn.SynthesisDraftEntity
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class MoreRepository @Inject constructor() {
     private val prefsDao: PreferenceDao = PreferenceDao
     private val photoDao: PhotoDao = AppDatabase.get().photoDao()
     private val synDao: SynthesisDao = AppDatabase.get().synthesisDao()
+    private val otherDao = AppDatabase.get().otherDao()
+    private val testDao = AppDatabase.get().testDao()
 
     suspend fun setAutoRefreshSeconds(seconds: Int) = prefsDao.setAutoRefreshSeconds(seconds)
 
@@ -48,4 +52,11 @@ class MoreRepository @Inject constructor() {
                 (synDraft to photoDraftList).toExport()
             }
         }.sortedBy { it.catalystName }
+
+    suspend fun getAllOnce() = DatabaseExport(
+        synthesisDrafts = synDao.observeAllDraftWithSteps().first(),
+        photoDrafts = photoDao.observeAllDraftWithSteps().first(),
+        testDrafts = testDao.observeAll().first(),
+        otherDrafts = otherDao.observeAll().first()
+    )
 }

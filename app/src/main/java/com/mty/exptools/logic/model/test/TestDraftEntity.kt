@@ -1,7 +1,9 @@
 package com.mty.exptools.logic.model.test
 
 import androidx.room.*
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(tableName = "test_draft")
 data class TestDraftEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,

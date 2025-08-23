@@ -1,7 +1,9 @@
 package com.mty.exptools.logic.model.other
 
 import androidx.room.*
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(tableName = "other_draft")
 data class OtherDraftEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,

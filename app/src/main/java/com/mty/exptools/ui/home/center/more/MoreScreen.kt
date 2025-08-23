@@ -28,7 +28,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,7 +44,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mty.exptools.ExptoolsApp
-import com.mty.exptools.util.toast
 import java.time.Instant
 import java.time.ZoneId
 
@@ -55,31 +53,6 @@ fun MoreScreen(
     viewModel: MoreViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    // SAF：创建文档
-    var pending by remember { mutableStateOf<Pair<String, String>?>(null) } // mime to payload
-    val createDoc = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
-    ) { uri ->
-        val (_, payload) = pending ?: return@rememberLauncherForActivityResult
-        if (uri != null) viewModel.writeToUri(uri, payload)
-        pending = null
-    }
-
-    // 订阅事件
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { e ->
-            when (e) {
-                is MoreUiEvent.RequestCreateDocument -> {
-                    pending = e.mime to e.payload
-                    createDoc.launch(e.fileName)
-                }
-                is MoreUiEvent.Toast -> {
-                    toast(e.msg)
-                }
-            }
-        }
-    }
 
     // —— UI —— //
     Column(
@@ -98,13 +71,17 @@ fun MoreScreen(
         // 2) 导出指定时间范围
         ExportRangeCard(
             setBackgroundBlur = setBackgroundBlur,
+            exporting = uiState.exportingRange,
             onExport = { start, end ->
                 viewModel.exportRange(start, end)
             }
         )
 
         // 3) 导出所有数据库
-        ExportAllCard(onExportAll = { viewModel.exportAll() })
+        ExportAllCard(
+            exporting = uiState.exportingAll,
+            onExportAll = { viewModel.exportAll() }
+        )
 
         ExportDirCard(
             folderUri = uiState.exportDirUri,
@@ -226,6 +203,7 @@ private fun OutlinedDropdownField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExportRangeCard(
+    exporting: Boolean,
     onExport: (startMillis: Long, endMillis: Long) -> Unit,
     setBackgroundBlur: (Boolean) -> Unit
 ) {
@@ -253,7 +231,8 @@ private fun ExportRangeCard(
                         val e = endMillis
                         if (s != null && e != null && s <= e) onExport(s, e)
                     },
-                    enabled = startMillis != null && endMillis != null && startMillis!! <= endMillis!!
+                    enabled = !exporting && startMillis != null && endMillis != null
+                            && startMillis!! <= endMillis!!
                 ) { Text("导出") }
             }
         }
@@ -275,12 +254,18 @@ private fun ExportRangeCard(
 }
 
 @Composable
-private fun ExportAllCard(onExportAll: () -> Unit) {
+private fun ExportAllCard(
+    exporting: Boolean,
+    onExportAll: () -> Unit
+) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("导出数据库（全部）", style = MaterialTheme.typography.titleMedium)
-            Text("导出全部数据为多个 JSON 文件。", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Button(onClick = onExportAll) { Text("导出全部") }
+            Text("导出全部数据为 JSON 文件。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Button(
+                onClick = onExportAll,
+                enabled = !exporting
+            ) { Text("导出全部") }
         }
     }
 }

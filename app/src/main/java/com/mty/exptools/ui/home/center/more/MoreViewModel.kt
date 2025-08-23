@@ -6,18 +6,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mty.exptools.ExptoolsApp
 import com.mty.exptools.logic.export.ExportIo
-import com.mty.exptools.logic.export.model.PhotoDraftExport
 import com.mty.exptools.repository.MoreRepository
+import com.mty.exptools.util.toast
 import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToStream
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -30,9 +30,6 @@ class MoreViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<MoreUiState>(MoreUiState())
     val uiState = _uiState.asStateFlow()
-
-    private val _events = MutableSharedFlow<MoreUiEvent>()
-    val events = _events.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -61,31 +58,29 @@ class MoreViewModel @Inject constructor(
     fun exportAll() = viewModelScope.launch {
         //val data = repo.getAllOnce()
         //val json = json.encodeToString(data)
-        //saveOrAsk("Exptools_All_${stamp()}.json", json)
-        _events.emit(MoreUiEvent.Toast("该功能正在开发中，敬请期待！"))
+        //saveToFile("Exptools_All_${stamp()}.json", json)
+        toast("该功能正在开发中，敬请期待！")
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     fun exportRange(start: Long, end: Long) = viewModelScope.launch {
-        val data = repo.getPhotoDraftsByTimeRange(start, end)
-        val listSerializer = ListSerializer(PhotoDraftExport.serializer())
-        val jsonString = json.encodeToString(listSerializer, data)
-        saveOrAsk("Exptools_PhotoRange_${stamp()}.json", jsonString)
-    }
-
-    /** 第一步：尽量写入“已选择的目录”，失败再让 UI 打开 SAF */
-    private suspend fun saveOrAsk(fileName: String, json: String) {
-        val ok = ExportIo.tryWriteToChosenDir(fileName, "application/json", json)
-        if (ok) {
-            _events.emit(MoreUiEvent.Toast("已导出到预设目录：$fileName"))
-        } else {
-            _events.emit(MoreUiEvent.RequestCreateDocument(fileName, "application/json", json))
+        _uiState.update { it.copy(exportingRange = true) }
+        val data = repo.getPhotoDraftsWithSynByTimeRange(start, end)
+        saveToFile("Exptools_PhotoRange_${stamp()}.json") { os ->
+            os.buffered().use {
+                json.encodeToStream(data, it)
+            }
         }
+        _uiState.update { it.copy(exportingRange = false) }
     }
 
-    /** 第二步：UI 把 SAF 返回的 Uri 传入，真正写入 */
-    fun writeToUri(uri: Uri, payload: String) = viewModelScope.launch {
-        val ok = ExportIo.writeToUri(uri, payload)
-        _events.emit(MoreUiEvent.Toast(if (ok) "导出完成" else "导出失败"))
+    private suspend fun saveToFile(fileName: String, writer: (OutputStream) -> Unit) {
+        val ok = ExportIo.tryWriteToChosenDir(fileName, "application/json", writer)
+        if (ok) {
+            toast("已导出到预设目录：$fileName")
+        } else {
+            toast("请先设置导出目录")
+        }
     }
 
     private fun stamp(): String =
@@ -98,7 +93,7 @@ class MoreViewModel @Inject constructor(
 
         repo.setExportDirUri(uri.toString())
         _uiState.update { it.copy(exportDirUri = uri.toString()) }
-        _events.emit(MoreUiEvent.Toast("已设置导出目录"))
+        toast("已设置导出目录")
     }
 
 }

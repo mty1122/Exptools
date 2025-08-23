@@ -3,17 +3,19 @@ package com.mty.exptools.logic.export.model
 import com.mty.exptools.domain.photo.PhotocatalysisDraft
 import com.mty.exptools.domain.photo.toMgL
 import com.mty.exptools.util.toMillisTime
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class PhotoDraftExport(
-    val catalystName: String,
-    val targetName: String,
-    val initialConc: String,
-    val lightSource: String,
-    val details: String,
-    val completedAt: String,
-    val performanceList: List<String>
+    @Transient val catalystName: String = "",
+    @SerialName("目标名称") val targetName: String,
+    @SerialName("初始浓度") val initialConc: String,
+    @SerialName("光源") val lightSource: String,
+    @SerialName("实验细节") val details: String,
+    @SerialName("完成时间") val completedAt: String,
+    @SerialName("性能") val performanceList: List<String>
 )
 
 fun PhotocatalysisDraft.toExport(): PhotoDraftExport {

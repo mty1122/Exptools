@@ -19,6 +19,9 @@ interface SynthesisDao {
     @Query("SELECT * FROM synthesis_draft WHERE material_name = :name LIMIT 1")
     suspend fun getByMaterialName(name: String): SynthesisDraftWithSteps?
 
+    @Query("SELECT * FROM synthesis_draft WHERE material_name = :name LIMIT 1")
+    suspend fun getWithoutStepsByMaterialName(name: String): SynthesisDraftEntity?
+
     /* 内部函数 start */
     @Query("SELECT id FROM synthesis_draft WHERE material_name = :name LIMIT 1")
     suspend fun findDraftIdByName(name: String): Long?

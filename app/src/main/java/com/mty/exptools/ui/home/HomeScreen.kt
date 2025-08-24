@@ -36,7 +36,9 @@ fun HomeScreen(
 ) {
 
     val navController = rememberNavController()
-    var currentRoute by rememberSaveable { mutableStateOf(HomeDestination.List.route) }
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    var currentRoute = navBackStackEntry?.destination?.route
 
     // 记录导航次数
     var navCount by remember { mutableIntStateOf(0) }
@@ -83,7 +85,6 @@ fun HomeScreen(
                             searchExpanded = false
                             query = ""
                         }
-                        currentRoute = targetRoute
                         navController.navigate(targetRoute) {
                             launchSingleTop = true
                             restoreState = true

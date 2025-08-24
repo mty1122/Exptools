@@ -11,7 +11,7 @@ import com.mty.exptools.ui.theme.ExptoolsTheme
 
 @Composable
 fun HomeBottomBar(
-    currentRoute: String,
+    currentRoute: String?,
     onItemClick: (String) -> Unit
 ) {
     NavigationBar {

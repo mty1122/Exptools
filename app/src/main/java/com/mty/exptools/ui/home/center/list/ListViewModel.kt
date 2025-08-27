@@ -147,16 +147,10 @@ class ListViewModel @Inject constructor(
             else -> ItemStatus.STATUS_START
         }
         val info = buildString {
-            if (status == ItemStatus.STATUS_COMPLETE) {
-                append(draft.conditionSummary)
-            }
-            else {
+            append(draft.conditionSummary)
+            if (status != ItemStatus.STATUS_COMPLETE) {
                 val targetStep = draft.steps[draft.currentStepIndex].content
-                val nextStep = draft.steps.getOrNull(draft.currentStepIndex + 1)?.content ?: ""
-                append(targetStep)
-                if (nextStep.isNotBlank()) {
-                    append("\n${nextStep}")
-                }
+                append("\n${targetStep}")
             }
         }
         return ItemSynUiState(

@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.mty.exptools"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mty.exptools"
         minSdk = 31
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 

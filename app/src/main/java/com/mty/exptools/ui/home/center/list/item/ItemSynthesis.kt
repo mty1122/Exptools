@@ -130,7 +130,7 @@ fun ItemSynthesis(
 
 private fun statusToString(status: ItemStatus, timeUnit: String) = when(status) {
     ItemStatus.STATUS_PAUSE -> "（已暂停）距离结束（${timeUnit}）"
-    ItemStatus.STATUS_START -> "距离当前步骤结束（${timeUnit}）"
+    ItemStatus.STATUS_START -> "距当前步骤结束（${timeUnit}）"
     ItemStatus.STATUS_COMPLETE -> "已完成（${timeUnit}）"
 }
 

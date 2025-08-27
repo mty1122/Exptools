@@ -289,7 +289,7 @@ private fun ExportDirCard(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("导出目录", style = MaterialTheme.typography.titleMedium)
             if (label.isBlank())
-                Text("设置默认导出目录，之后导出会自动保存到该目录。")
+                Text("设置默认导出目录，之后导出会自动保存到该目录")
             else
                 Text("当前设置：$label")
             Button(onClick = { launcher.launch(null) }) { Text("选择目录") }

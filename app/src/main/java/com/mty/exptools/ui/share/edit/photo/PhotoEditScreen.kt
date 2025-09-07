@@ -42,8 +42,11 @@ fun PhotoEditScreen(
         label = "edit-blur"
     )
 
-    BackHandler(enabled = uiState.mode == PhotocatalysisMode.EDIT) {
-        showBackConfirmDialog = true
+    BackHandler {
+        if (uiState.mode == PhotocatalysisMode.EDIT)
+            showBackConfirmDialog = true
+        else
+            navController.popBackStack()
     }
 
     Scaffold(

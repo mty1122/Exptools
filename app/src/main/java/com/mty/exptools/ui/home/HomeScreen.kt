@@ -7,7 +7,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -184,6 +183,7 @@ fun HomeScreen(
                     MoreScreen(
                         setBackgroundBlur = ::setBackgroundBlur,
                         lazyListState = listState,
+                        navController = navController,
                         bottomPadding = innerPadding.calculateBottomPadding()
                     )
                 }

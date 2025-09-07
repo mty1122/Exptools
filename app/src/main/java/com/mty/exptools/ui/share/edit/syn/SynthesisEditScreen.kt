@@ -37,8 +37,11 @@ fun SynthesisEditScreen(
         label = "edit-blur"
     )
 
-    BackHandler(enabled = uiState.mode == SynthesisMode.EDIT) {
-        showBackConfirmDialog = true
+    BackHandler {
+        if (uiState.mode == SynthesisMode.EDIT)
+            showBackConfirmDialog = true
+        else
+            navController.popBackStack()
     }
 
     Scaffold(

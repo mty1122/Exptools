@@ -2,6 +2,7 @@ package com.mty.exptools.ui.home.center.more
 
 import android.net.Uri
 import android.provider.DocumentsContract
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
@@ -46,6 +47,7 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.mty.exptools.ExptoolsApp
 import java.time.Instant
 import java.time.ZoneId
@@ -55,9 +57,14 @@ fun MoreScreen(
     setBackgroundBlur: (Boolean) -> Unit,
     lazyListState: LazyListState,
     bottomPadding: Dp,
+    navController: NavController,
     viewModel: MoreViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    BackHandler {
+        navController.popBackStack()
+    }
 
     // —— UI —— //
     LazyColumn(

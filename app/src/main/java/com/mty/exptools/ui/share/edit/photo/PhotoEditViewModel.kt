@@ -98,6 +98,13 @@ class PhotoEditViewModel @Inject constructor(
                                 )
                             }
                     }
+                    // 光催化实验（同名）连续进行，不暂停
+                    if (!state.running && !state.draft.isFinished && state.currentStepIndex > 0) {
+                        val lastStep = state.draft.steps[state.currentStepIndex - 1]
+                        val currentStep = state.draft.steps[state.currentStepIndex]
+                        if (lastStep.name == currentStep.name)
+                            onAction(PhotoEditAction.ToggleRun)
+                    }
                 }
             }.launchIn(this)
         }

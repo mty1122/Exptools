@@ -36,8 +36,11 @@ fun OtherEditScreen(
         label = "edit-blur"
     )
 
-    BackHandler(enabled = uiState.mode == OtherMode.EDIT) {
-        showBackConfirmDialog = true
+    BackHandler {
+        if (uiState.mode == OtherMode.EDIT)
+            showBackConfirmDialog = true
+        else
+            navController.popBackStack()
     }
 
     Scaffold(

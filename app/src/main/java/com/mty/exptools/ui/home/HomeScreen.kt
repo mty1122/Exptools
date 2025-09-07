@@ -5,7 +5,9 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,9 +28,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mty.exptools.ui.HomeRoute
 import com.mty.exptools.ui.home.bottom.HomeBottomBar
+import com.mty.exptools.ui.home.center.FrostedBottomBand
 import com.mty.exptools.ui.home.center.list.ListScreen
 import com.mty.exptools.ui.home.center.more.MoreScreen
 import com.mty.exptools.ui.home.topbar.HomeTopBar
+import com.mty.exptools.ui.theme.BottomDark
+import com.mty.exptools.ui.theme.BottomLight
 
 @Composable
 fun HomeScreen(
@@ -101,7 +106,7 @@ fun HomeScreen(
         NavHost(
             navController = navController,
             startDestination = HomeDestination.List.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
         ) {
             composable(
                 route = HomeDestination.List.route,
@@ -130,11 +135,19 @@ fun HomeScreen(
                     )
                 }
             ) {
-                ListScreen(
-                    navCount = navCount,
-                    query = query,
-                    topNavController = topNavController
-                )
+                FrostedBottomBand(
+                    bandHeight = innerPadding.calculateBottomPadding(),
+                    overlay = (if (isSystemInDarkTheme()) BottomDark else BottomLight).copy(alpha = 0.28f)
+                ) { listState, isMain->
+                    ListScreen(
+                        navCount = navCount,
+                        query = query,
+                        lazyListState = listState,
+                        bottomPadding = innerPadding.calculateBottomPadding(),
+                        isMain = isMain,
+                        topNavController = topNavController
+                    )
+                }
             }
             composable(
                 route = HomeDestination.More.route,
@@ -162,7 +175,19 @@ fun HomeScreen(
                         targetOffsetX = { it }
                     )
                 }
-            ) { MoreScreen(::setBackgroundBlur) }
+            ) {
+                FrostedBottomBand(
+                    bandHeight = innerPadding.calculateBottomPadding(),
+                    blurRadius = 10.dp,
+                    overlay = (if (isSystemInDarkTheme()) BottomDark else BottomLight).copy(alpha = 0.8f)
+                ) { listState, _->
+                    MoreScreen(
+                        setBackgroundBlur = ::setBackgroundBlur,
+                        lazyListState = listState,
+                        bottomPadding = innerPadding.calculateBottomPadding()
+                    )
+                }
+            }
         }
     }
 

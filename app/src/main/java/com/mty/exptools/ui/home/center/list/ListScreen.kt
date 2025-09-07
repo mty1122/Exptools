@@ -5,7 +5,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -25,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +50,9 @@ import com.mty.exptools.ui.home.center.list.item.ItemTestUiState
 fun ListScreen(
     navCount: Int,
     query: String,
+    lazyListState: LazyListState,
+    bottomPadding: Dp,
+    isMain: Boolean = true,
     topNavController: NavController,
     viewModel: ListViewModel = hiltViewModel()
 ) {
@@ -59,7 +65,6 @@ fun ListScreen(
     val refreshState = rememberPullToRefreshState()
     val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
 
-    val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
     var expanded by rememberSaveable { mutableStateOf(false) } // ← hoist 展开状态
     val blur by animateDpAsState(
         targetValue = if (expanded) 12.dp else 0.dp, // 背景模糊半径
@@ -95,7 +100,7 @@ fun ListScreen(
                 .blur(blur),
             contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            state = listState
+            state = lazyListState
         ) {
             items(filteredUiStateList, key = { it.listItemId }) { uiState ->
                 when (uiState) {
@@ -113,30 +118,38 @@ fun ListScreen(
                     }
                 }
             }
+            item {
+                Spacer(Modifier.height(bottomPadding))
+            }
         }
 
-        AddItemSpeedDial(
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
-            onAdd = { itemType->
-                when (itemType) {
-                    ItemType.SYNTHESIS -> {
-                        topNavController.navigate(SynthesisEditRoute())
+        if (isMain) {
+            AddItemSpeedDial(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+                onAdd = { itemType->
+                    when (itemType) {
+                        ItemType.SYNTHESIS -> {
+                            topNavController.navigate(SynthesisEditRoute())
+                        }
+                        ItemType.PHOTOCATALYSIS -> {
+                            topNavController.navigate(PhotoEditRoute())
+                        }
+                        ItemType.TEST -> {
+                            topNavController.navigate(TestEditRoute())
+                        }
+                        ItemType.OTHER -> {
+                            topNavController.navigate(OtherEditRoute())
+                        }
                     }
-                    ItemType.PHOTOCATALYSIS -> {
-                        topNavController.navigate(PhotoEditRoute())
-                    }
-                    ItemType.TEST -> {
-                        topNavController.navigate(TestEditRoute())
-                    }
-                    ItemType.OTHER -> {
-                        topNavController.navigate(OtherEditRoute())
-                    }
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        )
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        end = 14.dp,
+                        bottom = bottomPadding + 16.dp
+                    )
+            )
+        }
     }
 }

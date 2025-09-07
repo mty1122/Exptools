@@ -76,7 +76,9 @@ fun AddItemSpeedDial(
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.align(Alignment.BottomEnd)
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 8.dp, bottom = 12.dp)
         ) {
 
             SpeedItem(
@@ -133,12 +135,12 @@ fun AddItemSpeedDial(
             FloatingActionButton(
                 onClick = { onExpandedChange(!expanded) },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = if (expanded) "收起" else "展开",
-                    modifier = modifier.graphicsLayer {
+                    modifier = Modifier.graphicsLayer {
                         rotationZ = rotation
                     }
                 )

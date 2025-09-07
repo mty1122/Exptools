@@ -5,6 +5,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.mty.exptools.ui.home.HomeDestination
 import com.mty.exptools.ui.theme.ExptoolsTheme
@@ -14,7 +15,7 @@ fun HomeBottomBar(
     currentRoute: String?,
     onItemClick: (String) -> Unit
 ) {
-    NavigationBar {
+    NavigationBar(containerColor = Color.Transparent) {
         NavigationBarItem(
             selected = currentRoute == HomeDestination.List.route,
             onClick = { onItemClick(HomeDestination.List.route) },

@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
@@ -38,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -50,51 +53,62 @@ import java.time.ZoneId
 @Composable
 fun MoreScreen(
     setBackgroundBlur: (Boolean) -> Unit,
+    lazyListState: LazyListState,
+    bottomPadding: Dp,
     viewModel: MoreViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // —— UI —— //
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        state = lazyListState
     ) {
         // 1) 自动刷新间隔
-        AutoRefreshCard(
-            current = uiState.autoRefreshSeconds,
-            onPick = { viewModel.setAutoRefreshSeconds(it) }
-        )
-
+        item {
+            AutoRefreshCard(
+                current = uiState.autoRefreshSeconds,
+                onPick = { viewModel.setAutoRefreshSeconds(it) }
+            )
+        }
         // 2) 导出指定时间范围
-        ExportRangeCard(
-            setBackgroundBlur = setBackgroundBlur,
-            exporting = uiState.exportingRange,
-            onExport = { start, end ->
-                viewModel.exportRange(start, end)
-            }
-        )
-
+        item {
+            ExportRangeCard(
+                setBackgroundBlur = setBackgroundBlur,
+                exporting = uiState.exportingRange,
+                onExport = { start, end ->
+                    viewModel.exportRange(start, end)
+                }
+            )
+        }
         // 3) 导出所有数据库
-        ExportAllCard(
-            exporting = uiState.exportingAll,
-            onExportAll = { viewModel.exportAll() }
-        )
-
-        ExportDirCard(
-            folderUri = uiState.exportDirUri,
-            onPickDir = { viewModel.setExportDir(it) }
-        )
-
+        item {
+            ExportAllCard(
+                exporting = uiState.exportingAll,
+                onExportAll = { viewModel.exportAll() }
+            )
+        }
+        item {
+            ExportDirCard(
+                folderUri = uiState.exportDirUri,
+                onPickDir = { viewModel.setExportDir(it) }
+            )
+        }
         // 4) 关于
-        AboutCard(
-            versionName = runCatching {
-                val context = LocalContext.current
-                context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0"
-            }.getOrDefault("1.0")
-        )
+        item {
+            AboutCard(
+                versionName = runCatching {
+                    val context = LocalContext.current
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0"
+                }.getOrDefault("1.0")
+            )
+        }
+        item {
+            Spacer(Modifier.height(bottomPadding - 8.dp))
+        }
     }
 }
 

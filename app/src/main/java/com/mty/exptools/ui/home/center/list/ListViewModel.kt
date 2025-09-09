@@ -8,6 +8,7 @@ import com.mty.exptools.domain.photo.PhotocatalysisDraft
 import com.mty.exptools.domain.syn.SynthesisDraft
 import com.mty.exptools.domain.test.TestDraft
 import com.mty.exptools.repository.ListRepository
+import com.mty.exptools.repository.PhotoRepository
 import com.mty.exptools.repository.TickRepository
 import com.mty.exptools.ui.home.center.list.item.ItemOtherUiState
 import com.mty.exptools.ui.home.center.list.item.ItemPhotoUiState
@@ -40,6 +41,7 @@ import kotlin.math.absoluteValue
 @HiltViewModel
 class ListViewModel @Inject constructor(
     repo: ListRepository,
+    private val photoRepo: PhotoRepository,
     tickRepo: TickRepository
 ) : ViewModel() {
 
@@ -71,7 +73,10 @@ class ListViewModel @Inject constructor(
         combine(synDraftFlow, photoDraftFlow, testDraftFlow, otherDraftFlow, refreshTrigger
         ) { synDrafts, photoDrafts, testDrafts, otherDrafts, _ ->
             val synUiStates = synDrafts.map { it.toItemSynUiState() }
-            val photoUiStates = photoDrafts.map { it.toItemPhotoUiState() }
+            val photoUiStates = photoDrafts.map {
+                maybeAutoContinue(it)
+                it.toItemPhotoUiState()
+            }
             val testUiStates = testDrafts.map { it.toItemTestUiState() }
             val otherUiStates = otherDrafts.map { it.toItemOtherUiState() }
 
@@ -262,6 +267,40 @@ class ListViewModel @Inject constructor(
             rightTime = time.absoluteValue.toMillisTime(),
             status = if (time > 0) ItemStatus.STATUS_COMPLETE else ItemStatus.STATUS_START
         )
+    }
+
+    private fun maybeAutoContinue(draft: PhotocatalysisDraft) {
+        // 光催化实验（同名）连续进行
+        if (!draft.isFinished && !draft.steps[draft.currentStepIndex].timer.isRunning()
+            && draft.currentStepIndex > 0) {
+            val lastStep = draft.steps[draft.currentStepIndex - 1]
+            val currentStep = draft.steps[draft.currentStepIndex]
+            if (lastStep.name == currentStep.name && currentStep.timer.neverStart()) {
+                val idx = draft.currentStepIndex
+                val steps = draft.steps.toMutableList()
+                val cur = steps[idx]
+                val newTimer = cur.timer.start()
+                steps[idx] = cur.copy(timer = newTimer)
+
+                val now = System.currentTimeMillis()
+                var remaining = 0L
+                for (index in idx until steps.size) {
+                    remaining += steps[index].timer.remaining()
+                }
+                val completedAt = now + remaining
+
+                // 持久化时间信息
+                viewModelScope.launch {
+                    photoRepo.updateStepsTimerByIndex(
+                        dbId = draft.dbId,
+                        orderIndexes = listOf(idx),
+                        accumulatedMillis = newTimer.accumulatedMillis,
+                        startEpochMs = newTimer.startEpochMs
+                    )
+                    photoRepo.setCompletedAt(draft.dbId, completedAt)
+                }
+            }
+        }
     }
 
 }

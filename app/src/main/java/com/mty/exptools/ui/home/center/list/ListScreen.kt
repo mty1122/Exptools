@@ -147,7 +147,7 @@ fun ListScreen(
                     .align(Alignment.BottomEnd)
                     .padding(
                         end = 14.dp,
-                        bottom = bottomPadding + 16.dp
+                        bottom = bottomPadding + 18.dp
                     )
             )
         }

@@ -5,9 +5,10 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,8 +32,6 @@ import com.mty.exptools.ui.home.center.FrostedBottomBand
 import com.mty.exptools.ui.home.center.list.ListScreen
 import com.mty.exptools.ui.home.center.more.MoreScreen
 import com.mty.exptools.ui.home.topbar.HomeTopBar
-import com.mty.exptools.ui.theme.BottomDark
-import com.mty.exptools.ui.theme.BottomLight
 
 @Composable
 fun HomeScreen(
@@ -136,7 +135,8 @@ fun HomeScreen(
             ) {
                 FrostedBottomBand(
                     bandHeight = innerPadding.calculateBottomPadding(),
-                    overlay = (if (isSystemInDarkTheme()) BottomDark else BottomLight).copy(alpha = 0.28f)
+                    blurRadius = 18.dp,
+                    overlay = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp).copy(alpha = 0.28f)
                 ) { listState, isMain->
                     ListScreen(
                         navCount = navCount,
@@ -178,7 +178,7 @@ fun HomeScreen(
                 FrostedBottomBand(
                     bandHeight = innerPadding.calculateBottomPadding(),
                     blurRadius = 10.dp,
-                    overlay = (if (isSystemInDarkTheme()) BottomDark else BottomLight).copy(alpha = 0.8f)
+                    overlay = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp).copy(alpha = 0.8f)
                 ) { listState, _->
                     MoreScreen(
                         setBackgroundBlur = ::setBackgroundBlur,

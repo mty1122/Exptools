@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +53,7 @@ import com.mty.exptools.domain.photo.LightSource
 import com.mty.exptools.domain.photo.PhotocatalysisStep
 import com.mty.exptools.domain.photo.PhotocatalysisTarget
 import com.mty.exptools.domain.photo.calcPerformance
+import com.mty.exptools.domain.photo.toA
 import com.mty.exptools.domain.photo.toMgL
 import com.mty.exptools.util.MillisTime
 import com.mty.exptools.util.asString
@@ -307,8 +309,9 @@ private fun SuggestionTextField(
 }
 
 @Composable
-private fun ReadonlyBox(text: String) {
+private fun ReadonlyBox(text: String, onClick: (() -> Unit)? = null) {
     Surface(
+        modifier = Modifier.clickable(onClick != null) { onClick?.invoke() },
         shape = RoundedCornerShape(10.dp),
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
@@ -378,9 +381,46 @@ private fun TargetCard(
                         )
                     }
                 } else {
-                    val unit = if (target.initialConcUnit == ConcUnit.ABSORBANCE_A) "A" else "mg/L"
+                    val baseUnit = if (target.initialConcUnit == ConcUnit.ABSORBANCE_A) "A" else "mg/L"
                     Spacer(Modifier.height(6.dp))
-                    ReadonlyBox((target.initialConcValue.ifBlank { "—" }) + " $unit")
+                    if (target.initialConcValue.isBlank()) {
+                        ReadonlyBox(text = "— $baseUnit")
+                    } else {
+                        var converted by rememberSaveable(
+                            target.initialConcValue,
+                            target.initialConcUnit,
+                            target.stdCurveK,
+                            target.stdCurveB
+                        ) { mutableStateOf(false) }
+
+                        // 点击时才进行换算
+                        val displayText = if (!converted) {
+                            "${target.initialConcValue} $baseUnit"
+                        } else {
+                            if (target.initialConcUnit == ConcUnit.ABSORBANCE_A) {
+                                val mgL = toMgL(
+                                    target.initialConcValue,
+                                    target.initialConcUnit,
+                                    target.stdCurveK,
+                                    target.stdCurveB
+                                )
+                                "${mgL?.let { "%.0f".format(it) } ?: "—"} mg/L"
+                            } else {
+                                val a = toA(
+                                    target.initialConcValue,
+                                    target.initialConcUnit,
+                                    target.stdCurveK,
+                                    target.stdCurveB
+                                )
+                                "${a?.let { "%.3f".format(it) } ?: "—"} A"
+                            }
+                        }
+
+                        ReadonlyBox(
+                            text = displayText,
+                            onClick = { converted = !converted }
+                        )
+                    }
                 }
             }
 

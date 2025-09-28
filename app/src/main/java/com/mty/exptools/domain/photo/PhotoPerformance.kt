@@ -12,6 +12,17 @@ fun toMgL(valueText: String, unit: ConcUnit, kText: String, bText: String): Doub
         }
     }
 
+fun toA(valueText: String, unit: ConcUnit, kText: String, bText: String): Double? =
+    when (unit) {
+        ConcUnit.ABSORBANCE_A -> valueText.toDoubleOrNull()
+        ConcUnit.MG_L -> {
+            val mgL = valueText.toDoubleOrNull() ?: return null
+            val k = kText.toDoubleOrNull() ?: return null
+            val b = bText.toDoubleOrNull() ?: 0.0
+            if (k <= 0.0) null else mgL * k + b
+        }
+    }
+
 /** 计算“分解率/产率”，C0=初始/期望浓度，Ci=当前浓度（均 mg/L） */
 fun calcPerformance(c0: Double?, ci: Double?): Double? {
     if (c0 == null || ci == null || c0 <= 0.0) return null

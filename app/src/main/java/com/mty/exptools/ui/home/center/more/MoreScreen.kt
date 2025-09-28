@@ -126,7 +126,7 @@ private fun AutoRefreshCard(
     onPick: (Int) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val options = listOf(5, 10, 15, 30, 60)
+    val options = listOf(3, 5, 10, 15, 30, 60)
 
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {

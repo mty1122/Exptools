@@ -62,7 +62,7 @@ fun HomeScreen(
     val topBackStack by topNavController.currentBackStackEntryAsState()
     val isOnHome = topBackStack?.destination?.route == HomeRoute::class.qualifiedName
     LaunchedEffect(isOnHome) {
-        if (!isOnHome) {
+        if (!isOnHome && searchExpanded && query.isBlank()) {
             searchExpanded = false
             query = ""
         }

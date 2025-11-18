@@ -231,6 +231,7 @@ class SynthesisEditViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 mode = SynthesisMode.VIEW, running = false,
+                                nameEditable = false,
                                 currentStepIndex = currentStepIndex,
                                 draft = it.draft.copy(completedAt = completedAt)
                             )
@@ -254,6 +255,7 @@ class SynthesisEditViewModel @Inject constructor(
                             _uiState.update {
                                 it.copy(
                                     mode = SynthesisMode.VIEW, running = false,
+                                    nameEditable = false,
                                     currentStepIndex = currentStepIndex,
                                     draft = it.draft.copy(steps = steps, completedAt = null)
                                 )
@@ -265,6 +267,7 @@ class SynthesisEditViewModel @Inject constructor(
                             _uiState.update {
                                 it.copy(
                                     mode = SynthesisMode.VIEW, running = false,
+                                    nameEditable = false,
                                     currentStepIndex = currentStepIndex,
                                     draft = it.draft.copy(completedAt = null)
                                 )

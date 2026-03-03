@@ -33,12 +33,12 @@ import kotlinx.coroutines.flow.onStart
 
 @Composable
 fun FrostedBottomBand(
+    mainState: LazyListState,
     bandHeight: Dp,                 // 传 innerPadding.calculateBottomPadding()
     blurRadius: Dp = 24.dp,
     overlay: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.28f),
     content: @Composable (LazyListState, Boolean) -> Unit
 ) {
-    val mainState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
     val bandState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
 
     val density = LocalDensity.current

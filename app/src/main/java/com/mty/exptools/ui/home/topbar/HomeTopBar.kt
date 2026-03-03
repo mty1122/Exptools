@@ -20,6 +20,7 @@ import com.mty.exptools.ui.theme.ExptoolsTheme
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(
+    modifier: Modifier = Modifier,
     searchExpanded: Boolean,
     query: String,
     showSearchIcon: Boolean,
@@ -27,6 +28,7 @@ fun HomeTopBar(
     onExpandChange: (Boolean) -> Unit,
 ) {
     TopAppBar(
+        modifier = modifier,
         title = {
             AnimatedContent(
                 targetState = searchExpanded,

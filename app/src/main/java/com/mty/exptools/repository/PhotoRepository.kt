@@ -20,6 +20,7 @@ class PhotoRepository @Inject constructor() {
         }
 
     suspend fun getById(dbId: Long): PhotocatalysisDraft? = photoDao.getById(dbId)?.toDomain()
+    fun observeById(dbId: Long) = photoDao.observeById(dbId).map { it?.toDomain() }
 
     suspend fun upsert(draft: PhotocatalysisDraft): Long {
         val draftEntity = draft.toEntity()

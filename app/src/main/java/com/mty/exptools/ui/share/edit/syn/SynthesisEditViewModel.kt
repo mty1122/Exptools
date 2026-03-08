@@ -27,7 +27,6 @@ import javax.inject.Inject
 @HiltViewModel
 class SynthesisEditViewModel @Inject constructor(
     private val repo: SynthesisRepository,
-    repoTick: TickRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -38,7 +37,7 @@ class SynthesisEditViewModel @Inject constructor(
     private val materialNameArg: String? =
         savedStateHandle.toRoute<SynthesisEditRoute>().materialName
 
-    private val tickFlow = repoTick.autoRefreshTicker
+    private val tickFlow = TickRepository.autoRefreshTicker
     private val _tick = MutableStateFlow(0)
     val tick: StateFlow<Int> = _tick.asStateFlow()
 
@@ -216,7 +215,7 @@ class SynthesisEditViewModel @Inject constructor(
                 val currentStepIndex = currentDraft.currentStepIndex
 
                 val now = System.currentTimeMillis()
-                var completedAt: Long? = null
+                var completedAt: Long?
                 when {
                     // 若draft已完成，则处理
                     currentDraft.isFinished -> {

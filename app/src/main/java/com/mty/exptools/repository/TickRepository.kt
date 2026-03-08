@@ -18,8 +18,7 @@ import kotlinx.coroutines.isActive
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
-class TickRepository @Inject constructor() {
+object TickRepository {
 
     /** 自动刷新间隔：默认 10 秒 */
     private val autoRefreshSeconds: Flow<Int> = PreferenceDao.observeAutoRefreshSeconds()

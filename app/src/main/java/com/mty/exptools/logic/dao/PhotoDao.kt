@@ -16,6 +16,10 @@ interface PhotoDao {
     @Query("SELECT * FROM photo_draft WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): PhotoDraftWithSteps?
 
+    @Transaction
+    @Query("SELECT * FROM photo_draft WHERE id = :id LIMIT 1")
+    fun observeById(id: Long): Flow<PhotoDraftWithSteps?>
+
     // 辅助函数 start
     @Upsert
     suspend fun upsertDraft(draft: PhotoDraftEntity): Long

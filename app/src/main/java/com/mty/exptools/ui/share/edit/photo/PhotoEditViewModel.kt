@@ -12,10 +12,14 @@ import com.mty.exptools.repository.TickRepository
 import com.mty.exptools.ui.PhotoEditRoute
 import com.mty.exptools.util.toast
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -24,10 +28,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PhotoEditViewModel @Inject constructor(
     private val repo: PhotoRepository,
-    tickRepo: TickRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -36,9 +40,14 @@ class PhotoEditViewModel @Inject constructor(
     )
     val uiState: StateFlow<PhotoEditUiState> = _uiState.asStateFlow()
 
-    private val tickFlow = tickRepo.autoRefreshTicker
+    private val tickFlow = TickRepository.autoRefreshTicker
     private val _tick = MutableStateFlow(0) // 自动刷新
     val tick: StateFlow<Int> = _tick.asStateFlow()
+
+    private val _dbId = MutableStateFlow<Long?>(null)
+    private var dbId: Long?
+        get() = _dbId.value
+        set(value) { _dbId.value = value }
 
     private lateinit var stepsBeforeEdit: List<PhotocatalysisStep>
 
@@ -46,7 +55,7 @@ class PhotoEditViewModel @Inject constructor(
         viewModelScope.launch {
             // 强类型路由
             val route = savedStateHandle.toRoute<PhotoEditRoute>()
-            val dbId = route.dbId
+            dbId = route.dbId
 
             if (dbId == null) {
                 // 新增
@@ -58,7 +67,7 @@ class PhotoEditViewModel @Inject constructor(
                 )
             } else {
                 // 加载已有实验
-                val loaded = repo.getById(dbId)
+                val loaded = repo.getById(dbId!!)
                 _uiState.value = if (loaded != null) {
                     PhotoEditUiState(
                         mode = PhotocatalysisMode.VIEW,
@@ -81,7 +90,8 @@ class PhotoEditViewModel @Inject constructor(
 
             stepsBeforeEdit = _uiState.value.draft.steps
         }
-        // 每过10秒刷新浏览模式的剩余时间和状态
+
+        // 自动跳转至下一步
         viewModelScope.launch {
             tickFlow.onEach {
                 if (isActive) {
@@ -102,15 +112,29 @@ class PhotoEditViewModel @Inject constructor(
                                 )
                             }
                     }
-                    // 光催化实验（同名）连续进行，不暂停
-                    if (!state.running && !state.draft.isFinished && state.currentStepIndex > 0) {
-                        val lastStep = state.draft.steps[state.currentStepIndex - 1]
-                        val currentStep = state.draft.steps[state.currentStepIndex]
-                        if (lastStep.name == currentStep.name && currentStep.timer.neverStart())
-                            onAction(PhotoEditAction.ToggleRun)
-                    }
                 }
             }.launchIn(this)
+        }
+
+        // 自动开始下一步（由AutoContinueCoordinator实现），这里只负责监听结果
+        viewModelScope.launch {
+            _dbId.filterNotNull()
+                .distinctUntilChanged()
+                .flatMapLatest { id -> repo.observeById(id) }
+                .collect { latest ->
+                    val latestDraft = latest ?: return@collect
+                    val state = _uiState.value
+                    if (state.mode == PhotocatalysisMode.VIEW) {
+                        _uiState.update {
+                            it.copy(
+                                draft = latestDraft,
+                                currentStepIndex = latestDraft.currentStepIndex,
+                                running = latestDraft.steps[latestDraft.currentStepIndex].timer.isRunning(),
+                                loading = false
+                            )
+                        }
+                    }
+                }
         }
     }
 
@@ -331,7 +355,7 @@ class PhotoEditViewModel @Inject constructor(
                 toast("催化剂名称不能为空！")
                 return@launch
             }
-            val dbId = repo.upsert(currentDraft)    // 新增返回新id；更新返回原id
+            dbId = repo.upsert(currentDraft)    // 新增返回新id；更新返回原id
 
             // 如果步骤没有发生变化（只是修改浓度），则不处理步骤
             val currentSteps = currentDraft.steps
@@ -346,7 +370,7 @@ class PhotoEditViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         mode = PhotocatalysisMode.VIEW,
-                        draft = it.draft.copy(dbId = dbId),
+                        draft = it.draft.copy(dbId = dbId!!),
                         isNew = false
                     )
                 }
@@ -357,7 +381,7 @@ class PhotoEditViewModel @Inject constructor(
             val currentStepIndex = currentDraft.currentStepIndex
 
             val now = System.currentTimeMillis()
-            var completedAt: Long? = null
+            var completedAt: Long?
             when {
                 // 若draft已完成，则处理
                 currentDraft.isFinished -> {
@@ -373,7 +397,7 @@ class PhotoEditViewModel @Inject constructor(
                         it.copy(
                             mode = PhotocatalysisMode.VIEW, running = false,
                             currentStepIndex = currentStepIndex,
-                            draft = it.draft.copy(dbId = dbId, completedAt = completedAt),
+                            draft = it.draft.copy(dbId = dbId!!, completedAt = completedAt),
                             isNew = false
                         )
                     }
@@ -387,7 +411,7 @@ class PhotoEditViewModel @Inject constructor(
                         val newTimer = cur.timer.pause()
                         steps[currentStepIndex] = cur.copy(timer = newTimer)
                         repo.updateStepsTimerByIndex(
-                            dbId = dbId,
+                            dbId = dbId!!,
                             orderIndexes = listOf(currentStepIndex),
                             accumulatedMillis = newTimer.accumulatedMillis,
                             startEpochMs = newTimer.startEpochMs
@@ -397,7 +421,7 @@ class PhotoEditViewModel @Inject constructor(
                             it.copy(
                                 mode = PhotocatalysisMode.VIEW, running = false,
                                 currentStepIndex = currentStepIndex,
-                                draft = it.draft.copy(dbId = dbId, steps = steps, completedAt = null),
+                                draft = it.draft.copy(dbId = dbId!!, steps = steps, completedAt = null),
                                 isNew = false
                             )
                         }
@@ -409,7 +433,7 @@ class PhotoEditViewModel @Inject constructor(
                             it.copy(
                                 mode = PhotocatalysisMode.VIEW, running = false,
                                 currentStepIndex = currentStepIndex,
-                                draft = it.draft.copy(dbId = dbId, completedAt = null),
+                                draft = it.draft.copy(dbId = dbId!!, completedAt = null),
                                 isNew = false
                             )
                         }

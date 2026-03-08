@@ -30,15 +30,24 @@ value class MillisTime(val millis: Long) {
         else -> Time(toDays(), TimeUnit.DAY)
     }
 
+    /** 用于时间戳 */
     fun toDateTime(): String {
         val currentDateTime = java.time.Instant.ofEpochMilli(millis)
         val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         return currentDateTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
     }
 
+    /** 用于时间戳 */
     fun toDate(): String {
         val currentDateTime = java.time.Instant.ofEpochMilli(millis)
         val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd")
+        return currentDateTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
+    }
+
+    /** 用于时间戳 yyyy-MM-dd HH:mm:ss */
+    fun toFormatString(pattern: String): String {
+        val currentDateTime = java.time.Instant.ofEpochMilli(millis)
+        val formatter = java.time.format.DateTimeFormatter.ofPattern(pattern)
         return currentDateTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
     }
 }

@@ -30,8 +30,10 @@ object LiveUpdateCoordinator {
                     if (!draft.isFinished && draft.completedAt != null) {
                         val idx = draft.currentStepIndex
                         val current = draft.steps.getOrNull(idx)
-                        val remaining = current?.timer?.remaining() ?: return@forEach
-                        val finish = System.currentTimeMillis() + remaining
+                        val currentTime = System.currentTimeMillis()
+                        val remaining = current?.timer?.remaining(currentTime) ?: return@forEach
+                        if (remaining <= 0L) return@forEach
+                        val finish = currentTime + remaining
                         val title = finish.toMillisTime().toFormatString("HH:mm")
                         add(
                             LiveTask(
@@ -51,8 +53,10 @@ object LiveUpdateCoordinator {
                     if (!draft.isFinished && draft.completedAt != null) {
                         val idx = draft.currentStepIndex
                         val current = draft.steps.getOrNull(idx)
-                        val remaining = current?.timer?.remaining() ?: return@forEach
-                        val finish = System.currentTimeMillis() + remaining
+                        val currentTime = System.currentTimeMillis()
+                        val remaining = current?.timer?.remaining(currentTime) ?: return@forEach
+                        if (remaining <= 0L) return@forEach
+                        val finish = currentTime + remaining
                         val title = finish.toMillisTime().toFormatString("HH:mm")
                         add(
                             LiveTask(
@@ -76,9 +80,16 @@ object LiveUpdateCoordinator {
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun start() {
         scope.launch {
+            var lastKey: String? = null
             liveTaskFlow.collect { task ->
-                if (task == null) LiveUpdateNotifier.cancel()
-                else LiveUpdateNotifier.showOrUpdate(task)
+                if (task == null) {
+                    LiveUpdateNotifier.cancel()
+                    lastKey = null
+                }
+                else if (lastKey != (task.stableKey + task.title)) {
+                    LiveUpdateNotifier.showOrUpdate(task)
+                    lastKey = task.stableKey + task.title
+                }
             }
         }
     }

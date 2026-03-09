@@ -30,6 +30,7 @@ object LiveUpdateCoordinator {
                     if (!draft.isFinished && draft.completedAt != null) {
                         val idx = draft.currentStepIndex
                         val current = draft.steps.getOrNull(idx)
+                        if (current?.timer?.isRunning() == false) return@forEach
                         val currentTime = System.currentTimeMillis()
                         val remaining = current?.timer?.remaining(currentTime) ?: return@forEach
                         if (remaining <= 0L) return@forEach
@@ -81,14 +82,23 @@ object LiveUpdateCoordinator {
     fun start() {
         scope.launch {
             var lastKey: String? = null
+            var lastRemainingMillis: Long? = null
             liveTaskFlow.collect { task ->
                 if (task == null) {
                     LiveUpdateNotifier.cancel()
                     lastKey = null
-                }
-                else if (lastKey != (task.stableKey + task.title)) {
+                    lastRemainingMillis = null
+                } else if (lastKey != (task.stableKey + task.title)) { // 不重复更新同一任务
                     LiveUpdateNotifier.showOrUpdate(task)
                     lastKey = task.stableKey + task.title
+                    lastRemainingMillis = task.remainingMillis
+                } else { // 保活机制，避免实时通知长时间展位被系统回收
+                    val crossedOneHour =
+                        lastRemainingMillis != null &&
+                                lastRemainingMillis!! > 60 * 60 * 1000L &&
+                                task.remainingMillis <= 60 * 60 * 1000L
+                    if (crossedOneHour) LiveUpdateNotifier.showOrUpdate(task)
+                    lastRemainingMillis = task.remainingMillis
                 }
             }
         }

@@ -41,8 +41,9 @@ object LiveUpdateNotifier {
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(task.smallIcon)
-            .setContentTitle("结束于 ${task.title}")
+            .setContentTitle("${task.title}结束")
             .setContentText(task.content)
+            .setSubText("实验进行中")
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

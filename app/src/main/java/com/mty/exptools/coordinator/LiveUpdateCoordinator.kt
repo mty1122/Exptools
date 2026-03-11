@@ -35,7 +35,7 @@ object LiveUpdateCoordinator {
                         val remaining = current?.timer?.remaining(currentTime) ?: return@forEach
                         if (remaining <= 0L) return@forEach
                         val finish = currentTime + remaining
-                        val title = finish.toMillisTime().toFormatString("HH:mm")
+                        val title = finish.toMillisTime().toFormatString("HH:mm") + "结束"
                         add(
                             LiveTask(
                                 stableKey = "syn_${draft.materialName}",
@@ -54,11 +54,12 @@ object LiveUpdateCoordinator {
                     if (!draft.isFinished && draft.completedAt != null) {
                         val idx = draft.currentStepIndex
                         val current = draft.steps.getOrNull(idx)
+                        if (current?.timer?.isRunning() == false) return@forEach
                         val currentTime = System.currentTimeMillis()
                         val remaining = current?.timer?.remaining(currentTime) ?: return@forEach
                         if (remaining <= 0L) return@forEach
                         val finish = currentTime + remaining
-                        val title = finish.toMillisTime().toFormatString("HH:mm")
+                        val title = finish.toMillisTime().toFormatString("HH:mm") + "结束"
                         add(
                             LiveTask(
                                 stableKey = "photo_${draft.dbId}",
@@ -92,12 +93,22 @@ object LiveUpdateCoordinator {
                     LiveUpdateNotifier.showOrUpdate(task)
                     lastKey = task.stableKey + task.title
                     lastRemainingMillis = task.remainingMillis
-                } else { // 保活机制，避免实时通知长时间展位被系统回收
+                } else {
+                    // 保活机制，避免实时通知长时间展位被系统回收
                     val crossedOneHour =
                         lastRemainingMillis != null &&
                                 lastRemainingMillis!! > 60 * 60 * 1000L &&
                                 task.remainingMillis <= 60 * 60 * 1000L
                     if (crossedOneHour) LiveUpdateNotifier.showOrUpdate(task)
+                    // 临近提醒机制
+                    val crossedFortySeconds =
+                        lastRemainingMillis != null &&
+                                lastRemainingMillis!! > 40 * 1000L &&
+                                task.remainingMillis <= 40 * 1000L
+                    if (crossedFortySeconds) LiveUpdateNotifier.showOrUpdate(
+                        task.copy(title = "即将结束")
+                    )
+
                     lastRemainingMillis = task.remainingMillis
                 }
             }
